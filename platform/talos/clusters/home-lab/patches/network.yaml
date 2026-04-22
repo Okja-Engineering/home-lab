@@ -1,0 +1,32 @@
+# Network configuration patch for Talos
+# Apply to both control-plane and worker nodes
+# Update NETWORK_INTERFACE after first Talos boot
+
+machine:
+  network:
+    hostname: "${CLUSTER_NAME}-${NODE_TYPE}-${NODE_INDEX}"
+    interfaces:
+      - deviceSelector:
+          hardwareAddr: "${MAC_ADDRESS}"  # Optional: use MAC address to identify interface
+        # Or use device name after confirming from Talos:
+        # interface: eth0  # or enp1s0, etc - determine after boot
+        addresses:
+          - "${NODE_IP}/24"
+        routes:
+          - network: 0.0.0.0/0
+            gateway: "${DEFAULT_GATEWAY}"
+  time:
+    servers:
+      - "${NTP_SERVERS}"
+  # DNS configuration
+  resolvConfig:
+    nameservers:
+      - "${DNS_SERVERS}"
+
+# API access restriction
+# Apply to control-plane nodes only
+cluster:
+  apiServer:
+    # Restrict API access to home management subnet
+    extraArgs:
+      admission-control-config-file: /etc/kubernetes/admission-control.yaml

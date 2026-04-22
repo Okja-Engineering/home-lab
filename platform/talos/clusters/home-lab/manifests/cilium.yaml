@@ -1,0 +1,17 @@
+# Cilium CNI Manifest
+# Install after cluster bootstrap with:
+# helm repo add cilium https://helm.cilium.io/
+# helm install cilium cilium/cilium --namespace kube-system --version <version>
+
+# Placeholder for Cilium Helm values
+# Generate actual manifest using:
+# helm template cilium cilium/cilium --namespace kube-system --version <version> -f values.yaml > cilium.yaml
+
+# Example values.yaml content:
+# ipam:
+#   mode: kubernetes
+# kubeProxyReplacement: true
+# hubble:
+#   enabled: false
+#   ui:
+#     enabled: false

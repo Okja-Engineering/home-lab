@@ -1,0 +1,26 @@
+# Talos secrets and generated state
+clusters/*/secrets/
+clusters/*/secrets.yaml
+clusters/*/generated/
+
+# Talos client configs
+talosconfig
+kubeconfig
+
+# Support bundles
+support-*.tar.gz
+
+# Talos state files
+*.talos
+
+# Editor temp files
+*~
+*.swp
+*.swo
+*.bak
+*.tmp
+.DS_Store
+
+# IDE files
+.vscode/
+.idea/
