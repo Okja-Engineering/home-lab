@@ -1,0 +1,50 @@
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Talos secrets and generated state
+talosconfig
+kubeconfig
+*.talos
+support-*.tar.gz
+
+# Talos cluster directories (should contain secrets/generated)
+clusters/*/secrets/
+clusters/*/secrets.yaml
+clusters/*/generated/
+
+# Environment files
+.env
+.env.local
+.env.*.local
+
+# Editor temp files
+*~
+*.swp
+*.swo
+*.bak
+*.tmp
+
+# IDE files
+.vscode/
+.idea/
+*.code-workspace
+
+# SSH keys
+id_rsa
+id_ed25519
+*.pem
+*.key
+
+# Age encryption keys
+age.key
+age.txt
+
+# Logs
+*.log
+logs/
+
+# Temporary directories
+tmp/
+temp/
