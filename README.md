@@ -38,7 +38,7 @@ The repository is currently in the documentation and planning phase. No cluster 
 - [Hardware Inventory](docs/01-hardware-inventory.md) - Control plane hardware specifications
 - [Network Plan](docs/02-network-plan.md) - Network topology and IP addressing
 - [Cluster Design](docs/03-cluster-design.md) - Architecture and scope boundaries
-- [Architecture Decision Records](docs/adr/) - Architectural decision records
+- [Architecture Decision Records](docs/adr/README.md) - Architectural decision records
 - [Diagrams](diagrams/) - Physical and logical topology diagrams
 
 ## Talos Configuration

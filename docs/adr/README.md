@@ -31,7 +31,7 @@ This home lab is both an operational platform and a learning portfolio. ADRs hel
 
 | ADR | Title | Status | Summary |
 |-----|-------|--------|---------|
-| 001 | Use Talos Linux | Accepted | Use Talos Linux as the base OS for Kubernetes nodes |
+| 001 | Use Talos Linux | Accepted | Use Talos Linux for Kubernetes nodes |
 | 002 | Start with Flat Network | Accepted | Bootstrap on a simple flat network before VLANs |
 | 003 | Use Three Control Plane Nodes | Accepted | Use three GMKtec mini PCs for HA control plane |
 | 004 | Defer GitOps Until Control Plane is Healthy | Accepted | Defer Flux installation until cluster is stable |
