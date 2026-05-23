@@ -20,6 +20,21 @@ The repository is currently in the documentation and planning phase. No cluster 
 - Preparing Talos configuration structure
 - Creating runbooks for control plane bootstrap
 
+## Current Milestone
+
+**Milestone 1: Talos Control Plane Foundation**
+
+The current milestone focuses on safely documenting and preparing the repo for bootstrapping a 3-node Talos Linux Kubernetes control plane on GMKtec mini PCs.
+
+This milestone includes:
+- Repository safety baseline (.gitignore, security documentation)
+- Hardware inventory and network planning
+- Cluster design and architecture decisions
+- Talos configuration structure and bootstrap runbooks
+- Topology diagrams
+
+This milestone is focused on repository preparation, documentation, and runbooks. Actual Talos installation, generated configs, and application deployment are deferred until the repo plan is reviewed and the hardware/network assumptions are confirmed.
+
 ## Target Architecture
 
 - **OS:** Talos Linux (immutable, minimal, Kubernetes-focused)
@@ -31,6 +46,19 @@ The repository is currently in the documentation and planning phase. No cluster 
 - **Ingress:** TBD (planned)
 - **Storage:** TBD (planned)
 - **Monitoring:** TBD (planned)
+
+## What's Deferred
+
+The following are intentionally deferred until after the control plane is healthy and stable:
+
+- **Worker nodes** - No worker nodes in initial milestone
+- **Flux/GitOps** - Deferred until control plane is healthy
+- **Cilium CNI** - Planned but not yet implemented
+- **Ingress controller** - Planned but not yet implemented
+- **Storage classes** - Planned but not yet implemented
+- **Monitoring/observability** - Planned but not yet implemented
+- **VLANs** - Starting with flat network, VLANs deferred
+- **Switch configuration** - Not required for initial Talos bootstrap
 
 ## Documentation
 
