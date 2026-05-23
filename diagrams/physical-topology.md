@@ -2,9 +2,10 @@
 
 ## Legend
 
-- **Solid lines:** Current / planned for first control-plane milestone
-- **Dashed lines:** Purchased but configuration deferred
-- **Dotted lines:** Future / deferred
+- **Solid lines:** Current / confirmed
+- **Dashed lines:** Near-term control-plane target
+- **Dotted lines:** Purchased but configuration deferred
+- **Gray:** Future / deferred
 
 ## Current Physical Layout
 
@@ -13,12 +14,12 @@ graph TB
     Internet[Internet]
     Router[Router<br/>192.168.1.1<br/>Gateway/DHCP/DNS]
     Workstation[Workstation<br/>macOS<br/>talosctl/kubectl]
-    Switch[TP-Link Omada Switch<br/>Purchased<br/>Config Deferred]
-    cp01[cp-01<br/>192.168.1.21<br/>GMKtec mini PC]
-    cp02[cp-02<br/>192.168.1.22<br/>GMKtec mini PC]
-    cp03[cp-03<br/>192.168.1.23<br/>GMKtec mini PC]
-    FutureWorkers[Future Workers<br/>Stateful/Platform/GPU]
-    FutureNAS[Future NAS<br/>Storage]
+    Switch[TP-Link Omada Switch<br/>Purchased<br/>Config Deferred<br/>Unmanaged/flat use initially]
+    cp01[cp-01<br/>192.168.1.21<br/>GMKtec mini PC<br/>Control-plane target]
+    cp02[cp-02<br/>192.168.1.22<br/>GMKtec mini PC<br/>Control-plane target]
+    cp03[cp-03<br/>192.168.1.23<br/>GMKtec mini PC<br/>Control-plane target]
+    FutureWorkers[Future Workers<br/>Stateful/Platform/GPU<br/>Deferred]
+    FutureNAS[Future NAS<br/>Storage<br/>Deferred]
 
     Internet --> Router
     Router --> Workstation
@@ -30,15 +31,17 @@ graph TB
     Switch -.-> FutureNAS
 
     classDef current fill:#90EE90,stroke:#228B22,stroke-width:2px
-    classDef deferred fill:#FFD700,stroke:#DAA520,stroke-width:2px,stroke-dasharray: 5 5
+    classDef target fill:#87CEEB,stroke:#4682B4,stroke-width:2px,stroke-dasharray: 5 5
+    classDef deferred fill:#FFD700,stroke:#DAA520,stroke-width:2px,stroke-dasharray: 2 2
     classDef future fill:#D3D3D3,stroke:#808080,stroke-width:2px,stroke-dasharray: 2 2
 
-    class Internet,Router,Workstation,cp01,cp02,cp03 current
+    class Internet,Router,Workstation current
+    class cp01,cp02,cp03 target
     class Switch deferred
     class FutureWorkers,FutureNAS future
 ```
 
-**Network:** Flat 192.168.1.0/24 (no VLANs initially)
+**Network:** Flat 192.168.1.0/24 (no VLANs - VLANs are not active)
 
 ## Components
 
@@ -91,18 +94,20 @@ graph TB
 - Switch ↔ NAS
 - Switch ↔ GPU worker
 
-## Port Mapping (Future)
+## Port Mapping (Future Planning Placeholder)
 
-When Omada switch is installed, document physical port mapping:
+When Omada switch is configured, document physical port mapping:
 
 | Port | Device | VLAN | Status |
 |------|--------|------|--------|
-| 1 | Router Uplink | Trunk | Planned |
-| 2 | cp-01 | 10 | Planned |
-| 3 | cp-02 | 10 | Planned |
-| 4 | cp-03 | 10 | Planned |
-| 5 | Workstation | 40 | Planned |
+| 1 | Router Uplink | Deferred | Planned |
+| 2 | cp-01 | Deferred | Planned |
+| 3 | cp-02 | Deferred | Planned |
+| 4 | cp-03 | Deferred | Planned |
+| 5 | Workstation | Deferred | Planned |
 | 6-10 | Future | TBD | Planned |
+
+**Note:** This table is a future planning placeholder. VLANs are not currently configured.
 
 ## Notes
 

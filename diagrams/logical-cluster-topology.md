@@ -2,26 +2,26 @@
 
 ## Legend
 
-- **Solid lines:** Current / planned for first control-plane milestone
-- **Dashed lines:** Planned but not yet implemented
-- **Dotted lines:** Future / deferred
+- **Solid lines:** Control-plane milestone target
+- **Dashed lines:** Planned after control plane is healthy
+- **Gray:** Future / deferred
 
-## Current Cluster Topology
+## Control Plane Milestone Target
 
 ```mermaid
 graph TB
     Workstation[Workstation<br/>talosctl/kubectl]
     Endpoint[k8s.lab.home.arpa:6443<br/>Cluster Endpoint<br/>192.168.1.21]
-    cp01[cp-01<br/>192.168.1.21<br/>Talos + kubelet + etcd]
-    cp02[cp-02<br/>192.168.1.22<br/>Talos + kubelet + etcd]
-    cp03[cp-03<br/>192.168.1.23<br/>Talos + kubelet + etcd]
-    etcd[etcd Cluster<br/>Quorum: 3/3]
-    k8s[Kubernetes<br/>Control Plane]
+    cp01[cp-01<br/>192.168.1.21<br/>Talos + kubelet + etcd<br/>Target]
+    cp02[cp-02<br/>192.168.1.22<br/>Talos + kubelet + etcd<br/>Target]
+    cp03[cp-03<br/>192.168.1.23<br/>Talos + kubelet + etcd<br/>Target]
+    etcd[etcd Cluster<br/>Target: 3 members]
+    k8s[Kubernetes<br/>Control Plane<br/>Target]
     apiserver[kube-apiserver]
     scheduler[kube-scheduler]
     controller[kube-controller-manager]
-    Cilium[Cilium CNI<br/>Planned/Deferred]
-    Flux[Flux GitOps<br/>Planned/Deferred]
+    Cilium[Cilium CNI<br/>Planned<br/>Not installed]
+    Flux[Flux GitOps<br/>Planned<br/>Deferred until control-plane healthy]
     Platform[Platform Services<br/>Ingress/Monitoring<br/>Planned/Deferred]
     Apps[Applications<br/>Planned/Deferred]
     Workers[Worker Nodes<br/>Stateful/Platform/GPU<br/>Deferred]
@@ -43,16 +43,16 @@ graph TB
     Platform -.-> Apps
     apiserver -.-> Workers
 
-    classDef current fill:#90EE90,stroke:#228B22,stroke-width:2px
+    classDef target fill:#87CEEB,stroke:#4682B4,stroke-width:2px
     classDef planned fill:#FFD700,stroke:#DAA520,stroke-width:2px,stroke-dasharray: 5 5
     classDef future fill:#D3D3D3,stroke:#808080,stroke-width:2px,stroke-dasharray: 2 2
 
-    class Workstation,Endpoint,cp01,cp02,cp03,etcd,k8s,apiserver,scheduler,controller current
+    class Workstation,Endpoint,cp01,cp02,cp03,etcd,k8s,apiserver,scheduler,controller target
     class Cilium,Flux,Platform,Apps planned
     class Workers future
 ```
 
-**Milestone 1:** Three-node Talos control plane with etcd quorum
+**Milestone 1 Target:** Three-node Talos control plane with etcd quorum (not yet built)
 
 ## Control Plane Components
 
