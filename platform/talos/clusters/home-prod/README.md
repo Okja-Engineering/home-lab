@@ -72,7 +72,7 @@ The bootstrap process transforms bare GMKtec mini PCs into a Talos Kubernetes co
 - After Phase 4: All nodes in maintenance mode
 - After Phase 5: kubectl can access cluster
 
-See [docs/runbooks/cp-01-talos-bootstrap.md](../../../docs/runbooks/cp-01-talos-bootstrap.md) for detailed execution steps.
+See [docs/runbooks/cp-01-talos-bootstrap.md](../../../../docs/runbooks/cp-01-talos-bootstrap.md) for detailed execution steps.
 
 ## Notes
 
