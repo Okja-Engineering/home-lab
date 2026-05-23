@@ -1,23 +1,23 @@
-# home-lab
+# home-prod
 
-Talos Linux cluster configuration for home lab.
+Talos Linux cluster configuration for home production environment.
 
 ## Cluster Details
 
-- **Name**: home-lab
-- **Domain**: <DOMAIN>
+- **Name**: home-prod
+- **Domain**: lab.home.arpa
 - **Control Plane Nodes**: 3
-- **Endpoint**: <CLUSTER_ENDPOINT>
+- **Endpoint**: k8s.lab.home.arpa
 
 ## Node IPs
 
-- CP01: <CP01_IP>
-- CP02: <CP02_IP>
-- CP03: <CP03_IP>
+- cp-01: 192.168.1.21
+- cp-02: 192.168.1.22
+- cp-03: 192.168.1.23
 
 ## Configuration
 
-- **Install Disk**: <INSTALL_DISK>
+- **Install Disk**: /dev/nvme0n1 (confirm with talosctl)
 - **Metadata**: See `metadata.env`
 - **Patches**: See `patches/` directory
 
@@ -26,14 +26,14 @@ Talos Linux cluster configuration for home lab.
 ### Step 1: Boot first node and confirm hardware
 
 ```bash
-# Boot cp01 from Talos ISO, then set its IP
-export CP01_IP=192.168.1.21
+# Boot cp-01 from Talos ISO, then set its IP
+export CP_01_IP=192.168.1.21
 
 # Confirm interface name (note the primary NIC with DHCP address)
-talosctl get --insecure --nodes $CP01_IP network
+talosctl get --insecure --nodes $CP_01_IP links
 
 # Confirm install disk (identify the 1TB NVMe, not USB installer)
-talosctl get --insecure --nodes $CP01_IP disks
+talosctl get --insecure --nodes $CP_01_IP disks
 ```
 
 ### Step 2: Create DNS record
@@ -47,13 +47,13 @@ k8s.lab.home.arpa -> 192.168.1.21
 
 ```bash
 # Navigate to cluster directory
-cd platform/talos/clusters/home-lab
+cd platform/talos/clusters/home-prod
 
 # Generate cluster secrets (first time only)
 talosctl gen secrets -o secrets/secrets.yaml
 
 # Generate machine configs
-talosctl gen config "home-lab" "https://k8s.lab.home.arpa:6443" \
+talosctl gen config "home-prod" "https://k8s.lab.home.arpa:6443" \
   --with-secrets secrets/secrets.yaml \
   --install-disk "/dev/nvme0n1" \
   --output-dir generated
@@ -62,17 +62,17 @@ talosctl gen config "home-lab" "https://k8s.lab.home.arpa:6443" \
 ### Step 4: Apply configs to control plane nodes
 
 ```bash
-# Apply to cp01
+# Apply to cp-01
 talosctl apply-config --insecure \
   --nodes 192.168.1.21 \
   --file generated/controlplane-1.yaml
 
-# Apply to cp02
+# Apply to cp-02
 talosctl apply-config --insecure \
   --nodes 192.168.1.22 \
   --file generated/controlplane-2.yaml
 
-# Apply to cp03
+# Apply to cp-03
 talosctl apply-config --insecure \
   --nodes 192.168.1.23 \
   --file generated/controlplane-3.yaml
@@ -100,3 +100,6 @@ talosctl kubeconfig --nodes 192.168.1.21 > kubeconfig
 - Run bootstrap only once after all control plane nodes are configured
 - Store `kubeconfig` securely, do not commit to Git
 - Regenerate machine configs after modifying `metadata.env` or patches
+- MAC addresses are documented locally for DHCP reservations, not committed to Git
+- Network interface names must be confirmed via Talos before config generation
+- Version pins are provisional - verify Talos/Kubernetes compatibility before use
