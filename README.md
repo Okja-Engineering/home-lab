@@ -11,29 +11,17 @@ This repository serves two goals:
 
 ## Current Status
 
-**Phase: Documentation and Planning**
+**Phase: cp-01 Talos Discovery**
 
-The repository is currently in the documentation and planning phase. No cluster is running yet. The focus is on:
+Milestone 1 (Talos Control Plane Foundation) is complete. The repo has planning docs, ADRs, diagrams, network plan, Talos source structure, and bootstrap runbooks.
 
-- Establishing repository safety and structure
-- Documenting hardware, network, and cluster design
-- Preparing Talos configuration structure
-- Creating runbooks for control plane bootstrap
+The current phase is cp-01 Talos Discovery:
+- Physically boot cp-01 into Talos maintenance mode
+- Confirm hardware and network facts
+- Identify network interface and install disk
+- Update metadata with confirmed values
 
-## Current Milestone
-
-**Milestone 1: Talos Control Plane Foundation**
-
-The current milestone focuses on safely documenting and preparing the repo for bootstrapping a 3-node Talos Linux Kubernetes control plane on GMKtec mini PCs.
-
-This milestone includes:
-- Repository safety baseline (.gitignore, security documentation)
-- Hardware inventory and network planning
-- Cluster design and architecture decisions
-- Talos configuration structure and bootstrap runbooks
-- Topology diagrams
-
-This milestone is focused on repository preparation, documentation, and runbooks. Actual Talos installation, generated configs, and application deployment are deferred until the repo plan is reviewed and the hardware/network assumptions are confirmed.
+**Stop point:** Do not generate Talos secrets or machine configs until discovery is complete.
 
 ## Target Architecture
 

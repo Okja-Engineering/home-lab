@@ -14,6 +14,22 @@ This runbook provides detailed execution steps for bootstrapping cp-01, the firs
 
 ---
 
+## Stop Point for Issue #13 / cp-01 Discovery
+
+**For Issue #13 (cp-01 Talos Discovery), stop after Part 1 (Discovery and Hardware Confirmation).**
+
+**Do not proceed to:**
+- Secrets generation (Part 3)
+- Machine config generation (Part 3)
+- Config application (Part 4)
+- Kubernetes bootstrap (Part 5)
+- Kubeconfig retrieval (Part 5)
+- Kubernetes validation (Part 5)
+
+Parts 2 and later are future steps. Complete discovery first, then update metadata with confirmed values before generating secrets or configs.
+
+---
+
 ## Part 1: Discovery and Hardware Confirmation
 
 **Goal:** Confirm cp-01 hardware, network interface, and disk before proceeding with configuration.
@@ -51,12 +67,22 @@ Configure the following settings:
 
 ### Step 3: Create Talos Bootable USB
 
-Download the Talos ISO and create a bootable USB drive:
+**Select Talos ISO version intentionally before flashing USB.**
+
+The `metadata.env` file currently contains provisional version pins (v1.8.0 for Talos, v1.31.0 for Kubernetes). These are not authoritative until confirmed.
+
+**Version selection guidance:**
+- Prefer matching the Talos ISO version to the installed talosctl version
+- Check your talosctl version: `talosctl version`
+- Update `metadata.env` after the chosen version is confirmed
 
 ```bash
-# Download Talos ISO (verify version matches metadata.env)
-# Example for v1.8.0:
-curl -LO https://github.com/siderolabs/talos/releases/download/v1.8.0/talos-amd64.iso
+# Download Talos ISO (select version intentionally)
+# Example for v1.8.0 (NOT authoritative - select based on your talosctl version):
+# curl -LO https://github.com/siderolabs/talos/releases/download/v1.8.0/talos-amd64.iso
+
+# Example for v1.13.2 (matches talosctl v1.13.2):
+curl -LO https://github.com/siderolabs/talos/releases/download/v1.13.2/talos-amd64.iso
 
 # Create bootable USB (macOS - replace disk identifier)
 # WARNING: This will erase the target USB drive
@@ -65,7 +91,7 @@ diskutil unmountDisk /dev/disk2
 sudo dd if=talos-amd64.iso of=/dev/rdisk2 bs=1m
 ```
 
-**Do not proceed until:** Bootable USB is created and verified.
+**Do not proceed until:** Bootable USB is created and verified and Talos ISO version is recorded.
 
 ### Step 4: Boot cp-01 from Talos ISO
 

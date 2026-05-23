@@ -84,3 +84,15 @@ See [docs/runbooks/three-node-control-plane-bootstrap.md](../../../../docs/runbo
 - MAC addresses are documented locally for DHCP reservations, not committed to Git
 - Network interface names must be confirmed via Talos before config generation
 - Version pins are provisional - verify Talos/Kubernetes compatibility before use
+
+## Patch Readiness Warning
+
+**Do not generate Talos machine configs until the following are confirmed:**
+
+- Network interface name is confirmed from Talos discovery (update `metadata.env`)
+- Install disk path is confirmed from Talos discovery (update `metadata.env`)
+- Talos version is confirmed and matches the ISO used for boot
+- Patch template variables are resolved or documented as intentional placeholders
+- Patches are reviewed for correctness before config generation
+
+Patches in `patches/` may contain unresolved template variables (e.g., `${MAC_ADDRESS}`, `${NODE_IP}`). These must be validated before running `talosctl gen config`.
