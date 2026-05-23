@@ -1,23 +1,44 @@
 # Physical Topology
 
+## Legend
+
+- **Solid lines:** Current / planned for first control-plane milestone
+- **Dashed lines:** Purchased but configuration deferred
+- **Dotted lines:** Future / deferred
+
 ## Current Physical Layout
 
+```mermaid
+graph TB
+    Internet[Internet]
+    Router[Router<br/>192.168.1.1<br/>Gateway/DHCP/DNS]
+    Workstation[Workstation<br/>macOS<br/>talosctl/kubectl]
+    Switch[TP-Link Omada Switch<br/>Purchased<br/>Config Deferred]
+    cp01[cp-01<br/>192.168.1.21<br/>GMKtec mini PC]
+    cp02[cp-02<br/>192.168.1.22<br/>GMKtec mini PC]
+    cp03[cp-03<br/>192.168.1.23<br/>GMKtec mini PC]
+    FutureWorkers[Future Workers<br/>Stateful/Platform/GPU]
+    FutureNAS[Future NAS<br/>Storage]
+
+    Internet --> Router
+    Router --> Workstation
+    Router -.-> Switch
+    Switch --> cp01
+    Switch --> cp02
+    Switch --> cp03
+    Switch -.-> FutureWorkers
+    Switch -.-> FutureNAS
+
+    classDef current fill:#90EE90,stroke:#228B22,stroke-width:2px
+    classDef deferred fill:#FFD700,stroke:#DAA520,stroke-width:2px,stroke-dasharray: 5 5
+    classDef future fill:#D3D3D3,stroke:#808080,stroke-width:2px,stroke-dasharray: 2 2
+
+    class Internet,Router,Workstation,cp01,cp02,cp03 current
+    class Switch deferred
+    class FutureWorkers,FutureNAS future
 ```
-                    Internet
-                        |
-                        |
-                 Router (192.168.1.1)
-                        |
-                        |
-            +-----------+-----------+
-            |                       |
-    Workstation            Switch (Omada - Purchased, Config Deferred)
-    (DHCP)                     |
-                        +-----+-----+-----+
-                        |     |     |     |
-                      cp-01 cp-02 cp-03  (Future)
-                      .21   .22   .23    Workers
-```
+
+**Network:** Flat 192.168.1.0/24 (no VLANs initially)
 
 ## Components
 

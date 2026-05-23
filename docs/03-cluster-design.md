@@ -7,6 +7,8 @@
 - **Cluster Endpoint:** k8s.lab.home.arpa:6443
 - **Environment:** Production home lab
 
+See [Logical Cluster Topology](../diagrams/logical-cluster-topology.md) for a visual representation of the cluster architecture.
+
 ## Control Plane Design
 
 ### Node Configuration

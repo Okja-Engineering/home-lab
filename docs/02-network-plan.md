@@ -4,6 +4,8 @@
 
 The home lab network starts with a simple flat network topology. VLANs are deferred until after the control plane is stable.
 
+See [Physical Topology](../diagrams/physical-topology.md) for a visual representation of the network layout.
+
 ## Network Configuration
 
 ### Basic Network

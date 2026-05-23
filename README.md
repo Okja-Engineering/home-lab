@@ -68,6 +68,8 @@ The following are intentionally deferred until after the control plane is health
 - [Cluster Design](docs/03-cluster-design.md) - Architecture and scope boundaries
 - [Architecture Decision Records](docs/adr/README.md) - Architectural decision records
 - [Diagrams](diagrams/) - Physical and logical topology diagrams
+  - [Physical Topology](diagrams/physical-topology.md) - Hardware layout and network connections
+  - [Logical Cluster Topology](diagrams/logical-cluster-topology.md) - Kubernetes control plane architecture
 
 ## Talos Configuration
 
