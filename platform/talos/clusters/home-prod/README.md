@@ -21,79 +21,58 @@ Talos Linux cluster configuration for home production environment.
 - **Metadata**: See `metadata.env`
 - **Patches**: See `patches/` directory
 
-## Bootstrap Commands
+## Bootstrap Plan
 
-### Step 1: Boot first node and confirm hardware
+The bootstrap process transforms bare GMKtec mini PCs into a Talos Kubernetes control plane. This is a high-level plan; detailed execution steps are in the cp-01 runbook.
 
-```bash
-# Boot cp-01 from Talos ISO, then set its IP
-export CP_01_IP=192.168.1.21
+### Prerequisites
 
-# Confirm interface name (note the primary NIC with DHCP address)
-talosctl get --insecure --nodes $CP_01_IP links
+- Workstation has talosctl and kubectl installed
+- 3x GMKtec mini PCs are available
+- TP-Link Omada switch is available (configuration not required)
+- Router access for DHCP reservations and DNS
 
-# Confirm install disk (identify the 1TB NVMe, not USB installer)
-talosctl get --insecure --nodes $CP_01_IP disks
-```
+### Phase 1: Hardware Preparation
 
-### Step 2: Create DNS record
+- Configure BIOS/UEFI settings on all 3 nodes (secure boot off, virtualization enabled)
+- Create Talos bootable USB media
+- Boot cp-01 from Talos ISO
+- Confirm hardware (interface names, disk paths)
 
-Create an A record in your home DNS:
-```
-k8s.lab.home.arpa -> 192.168.1.21
-```
+### Phase 2: Network Preparation
 
-### Step 3: Generate secrets and machine configs
+- Create DHCP reservations for cp-01 (192.168.1.21), cp-02 (192.168.1.22), cp-03 (192.168.1.23)
+- Create DNS A record: k8s.lab.home.arpa → 192.168.1.21
+- Verify network connectivity from workstation to nodes
 
-```bash
-# Navigate to cluster directory
-cd platform/talos/clusters/home-prod
+### Phase 3: Configuration Generation
 
-# Generate cluster secrets (first time only)
-talosctl gen secrets -o secrets/secrets.yaml
+- Generate Talos secrets bundle (store securely, not in Git)
+- Generate machine configs using talosctl gen config with patches
+- Review generated configs for correctness
 
-# Generate machine configs
-talosctl gen config "home-prod" "https://k8s.lab.home.arpa:6443" \
-  --with-secrets secrets/secrets.yaml \
-  --install-disk "/dev/nvme0n1" \
-  --output-dir generated
-```
+### Phase 4: Config Application
 
-### Step 4: Apply configs to control plane nodes
+- Apply machine config to cp-01
+- Apply machine config to cp-02
+- Apply machine config to cp-03
+- Verify all nodes are in maintenance mode
 
-```bash
-# Apply to cp-01
-talosctl apply-config --insecure \
-  --nodes 192.168.1.21 \
-  --file generated/controlplane-1.yaml
+### Phase 5: Cluster Bootstrap
 
-# Apply to cp-02
-talosctl apply-config --insecure \
-  --nodes 192.168.1.22 \
-  --file generated/controlplane-2.yaml
+- Bootstrap cluster on cp-01 (run once)
+- Retrieve kubeconfig (store securely, not in Git)
+- Verify cluster health via kubectl
 
-# Apply to cp-03
-talosctl apply-config --insecure \
-  --nodes 192.168.1.23 \
-  --file generated/controlplane-3.yaml
-```
+### Validation Gates
 
-### Step 5: Configure talosctl endpoints
+- After Phase 1: Hardware confirmed on cp-01
+- After Phase 2: DHCP reservations working, DNS resolving
+- After Phase 3: Generated configs reviewed
+- After Phase 4: All nodes in maintenance mode
+- After Phase 5: kubectl can access cluster
 
-```bash
-# Set talosctl to use all control plane nodes
-export TALOSAPI=192.168.1.21,192.168.1.22,192.168.1.23
-```
-
-### Step 6: Bootstrap cluster
-
-```bash
-# Bootstrap cluster (run once on first control plane node)
-talosctl bootstrap --nodes 192.168.1.21
-
-# Get kubeconfig
-talosctl kubeconfig --nodes 192.168.1.21 > kubeconfig
-```
+See [docs/runbooks/cp-01-talos-bootstrap.md](../../../docs/runbooks/cp-01-talos-bootstrap.md) for detailed execution steps.
 
 ## Notes
 
