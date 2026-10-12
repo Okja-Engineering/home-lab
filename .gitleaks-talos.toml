@@ -1,0 +1,33 @@
+# Talos rules for gitleaks: the secrets that talosctl and kubectl write.
+#
+# One of the two rule sets that scripts/secret-scan.sh applies, for the
+# pre-commit hook and for the CI scan alike. The other is .gitleaks.toml,
+# gitleaks' default rules. Written and checked against gitleaks v8.30.1, the
+# version both of them pin.
+#
+# This file has no [extend] section and no allowlist, on purpose. Extending
+# the default config also imports its allowlist, and a path on that allowlist
+# (a name ending in .v2, .bin or .pdf, the common lock files, node_modules/,
+# some vendor/ trees, and more) is exempt from every rule. With no allowlist
+# these rules apply to every text change gitleaks is given. The one exception
+# is this file: gitleaks does not apply a config to the file it was loaded
+# from.
+
+title = "home-lab gitleaks config: Talos rules"
+
+# talosctl and kubectl write keys and certificates as base64-encoded PEM, so
+# the value starts with the base64 form of the PEM "BEGIN" marker, not with the
+# marker itself. The capture group is the value: gitleaks treats the first
+# capture group as the secret, and that is what --redact hides in output.
+[[rules]]
+id = "talos-base64-pem"
+description = "Base64-encoded PEM block (Talos secrets, machine config or kubeconfig)"
+regex = '''(?i)\b(?:key|crt|client-key-data):\s*["']?(LS0tLS1CRUdJTi[a-z0-9+/]*={0,2})'''
+
+# The file names talosctl gives its output by default, plus kubeconfig.
+# .gitignore ignores them; this catches one that was committed anyway, for
+# example with `git add -f`.
+[[rules]]
+id = "talos-generated-file"
+description = "Unencrypted talosctl output committed"
+path = '''(^|/)(secrets|controlplane|worker)\.yaml$|(^|/)(talosconfig|kubeconfig)$'''
