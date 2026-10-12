@@ -9,10 +9,18 @@ kubeconfig
 *.talos
 support-*.tar.gz
 
-# Talos cluster directories (should contain secrets/generated)
-clusters/*/secrets/
-clusters/*/secrets.yaml
-clusters/*/generated/
+# talosctl default output names, wherever they land
+# (secrets.sops.yaml, the SOPS-encrypted bundle, does not match and stays committable)
+secrets.yaml
+controlplane.yaml
+worker.yaml
+*.snapshot
+
+# Each cluster's secrets/ and generated/ directories are ignored by
+# platform/talos/.gitignore. A pattern with a slash at its start or in its
+# middle is anchored to the directory of the .gitignore file that holds it, so
+# a rule written here as clusters/*/... would never match
+# platform/talos/clusters/...
 
 # Environment files
 .env
