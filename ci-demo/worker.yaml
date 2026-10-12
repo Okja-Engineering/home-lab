@@ -1,0 +1,5 @@
+# FAKE FIXTURE. NOT talosctl OUTPUT. HOLDS NO SECRET. DO NOT MERGE.
+#
+# Demonstration for issue 18: the "Secret scan" workflow must flag a file with
+# this name (rule talos-generated-file) whatever it contains.
+fake: true
