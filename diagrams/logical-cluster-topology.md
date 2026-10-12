@@ -2,11 +2,13 @@
 
 ## Legend
 
-- **Solid lines:** Control-plane milestone target
+- **Solid lines:** Phase 2 target (three-node control plane)
 - **Dashed lines:** Planned after control plane is healthy
 - **Gray:** Future / deferred
 
-## Control Plane Milestone Target
+The phases are defined in [Goals](../docs/00-goals.md#phases).
+
+## Phase 2 Target
 
 ```mermaid
 graph TB
@@ -52,7 +54,7 @@ graph TB
     class Workers future
 ```
 
-**Milestone 1 Target:** Three-node Talos control plane with etcd quorum (not yet built)
+**Phase 2 Target:** Three-node Talos control plane with etcd quorum (not yet built)
 
 ## Control Plane Components
 

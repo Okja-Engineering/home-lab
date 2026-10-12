@@ -37,9 +37,13 @@ This home lab project aims to build a functional Kubernetes platform that serves
 - Disaster recovery and backup strategies
 - Multi-node cluster operations
 
-## Success Criteria
+## Phases
 
-### Phase 1: Control Plane Foundation
+The project is built in four phases. They are defined here and nowhere else; other documents refer to them by number. Each phase lists its success criteria.
+
+"Milestone" is the GitHub term and is numbered separately. "Milestone 1" always means the GitHub milestone "Milestone 1: Talos Control Plane Foundation", which tracked Phase 1: the planning foundation, not a running cluster. A later milestone can cover only part of a phase, so milestone numbers do not match phase numbers; the [milestone list](https://github.com/Okja-Engineering/home-lab/milestones) on GitHub shows them.
+
+### Phase 1: Repository Foundation
 
 - Repository is safe from accidental secret commits
 - Hardware, network, and cluster design are documented
@@ -47,7 +51,7 @@ This home lab project aims to build a functional Kubernetes platform that serves
 - Runbooks exist for control plane bootstrap
 - Topology is visualized
 
-This phase is tracked in the GitHub milestone "Milestone 1: Talos Control Plane Foundation" with 12 planning issues.
+This phase is complete. It was tracked in the GitHub milestone "Milestone 1: Talos Control Plane Foundation" with 12 planning issues.
 
 ### Phase 2: Three-Node Control Plane
 
