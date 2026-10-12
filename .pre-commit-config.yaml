@@ -1,9 +1,13 @@
 # Git hooks run by pre-commit (https://pre-commit.com).
 # Set up once per clone with: pre-commit install
 repos:
-  # Scans staged changes for secrets, using the rules in .gitleaks.toml.
+  # Scans staged changes for secrets. pre-commit builds gitleaks from the
+  # pinned commit and puts it on PATH for the hook. The hook's entry is
+  # scripts/secret-scan.sh, not gitleaks itself, so a commit gets the same
+  # rules and the same checks as the CI scan, which runs that script too.
   # Keep this version in step with .github/workflows/secret-scan.yml.
   - repo: https://github.com/gitleaks/gitleaks
     rev: 83d9cd684c87d95d656c1458ef04895a7f1cbd8e  # frozen: v8.30.1
     hooks:
       - id: gitleaks
+        entry: scripts/secret-scan.sh staged
