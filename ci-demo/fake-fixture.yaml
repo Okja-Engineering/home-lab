@@ -1,0 +1,6 @@
+# FAKE FIXTURE. NOT A SECRET. DO NOT MERGE.
+#
+# Demonstration for issue 18: the "Secret scan" workflow must fail on this
+# file. The value below is base64 for the 15 characters "-----BEGIN FAKE".
+# It is not a key and never was one.
+key: LS0tLS1CRUdJTiBGQUtF
