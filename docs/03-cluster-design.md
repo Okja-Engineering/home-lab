@@ -27,7 +27,7 @@ The control plane consists of 3 Talos Linux nodes:
 - **OS:** Talos Linux
 - **Kubernetes Version:** v1.31.0 (planned)
 - **Talos Version:** v1.8.0 (planned)
-- **CNI:** Cilium (planned)
+- **CNI:** Cilium, installed during bootstrap in place of kube-proxy ([ADR-005](adr/005-use-cilium-with-kube-proxy-replacement.md))
 - **Etcd:** Embedded in control plane nodes
 
 ### High Availability
@@ -44,14 +44,13 @@ The phases are defined in [Goals](00-goals.md#phases). Phase 1, the repository f
 ### In Scope (Phase 2)
 
 - 3-node Talos Linux control plane
-- Kubernetes cluster bootstrap
+- Kubernetes cluster bootstrap, including Cilium as the CNI ([ADR-005](adr/005-use-cilium-with-kube-proxy-replacement.md))
 - Basic network connectivity (flat network)
 - Control plane health validation
 - Documentation and runbooks
 
 ### In Scope (Phase 3 - Planned)
 
-- Cilium CNI installation
 - Ingress controller
 - Storage classes
 - Basic monitoring
@@ -92,8 +91,7 @@ The phases are defined in [Goals](00-goals.md#phases). Phase 1, the repository f
 ### Worker Node Timing
 
 Worker nodes will be added after:
-- Control plane is stable and healthy
-- Cilium CNI is operational
+- Control plane is stable and healthy, which includes Cilium ([ADR-005](adr/005-use-cilium-with-kube-proxy-replacement.md))
 - Storage classes are configured
 - Monitoring is collecting metrics
 
@@ -106,11 +104,11 @@ Worker nodes will be added after:
 - **kube-controller-manager:** Controller loops
 - **etcd:** Distributed key-value store
 - **kubelet:** Node agent
-- **kube-proxy:** Network proxy
+- **Cilium:** CNI and kube-proxy replacement; kube-proxy is not deployed ([ADR-005](adr/005-use-cilium-with-kube-proxy-replacement.md))
 
 ### Platform Components (Planned)
 
-- **Cilium:** CNI, network policy, observability
+- **Cilium features beyond the CNI:** Network policy, observability
 - **cert-manager:** Certificate management
 - **Ingress Controller:** NGINX or Gateway API
 - **external-secrets:** Secret synchronization
