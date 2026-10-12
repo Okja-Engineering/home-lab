@@ -32,7 +32,7 @@ The current work in Phase 2 is cp-01 Talos discovery:
 - **Control Plane:** 3x GMKtec mini PCs (cp-01, cp-02, cp-03)
 - **Network:** Flat network initially, VLANs deferred
 - **GitOps:** Flux (planned, after cluster is healthy)
-- **CNI:** Cilium, installed during bootstrap in place of kube-proxy ([ADR-005](docs/adr/005-use-cilium-with-kube-proxy-replacement.md))
+- **CNI:** Cilium with kube-proxy replacement, to be installed as part of bootstrap ([ADR-005](docs/adr/005-use-cilium-with-kube-proxy-replacement.md))
 - **Ingress:** TBD (planned)
 - **Storage:** TBD (planned)
 - **Monitoring:** TBD (planned)
