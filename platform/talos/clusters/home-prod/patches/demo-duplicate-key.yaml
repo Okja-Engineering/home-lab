@@ -1,0 +1,5 @@
+# Throwaway file for the #23 demonstration. Do not merge.
+# The key "type" appears twice, which yamllint reports as an error.
+machine:
+  type: controlplane
+  type: worker
