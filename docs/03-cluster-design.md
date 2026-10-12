@@ -136,7 +136,7 @@ Worker nodes will be added after:
 
 - Flat network (192.168.1.0/24)
 - No VLANs initially
-- Static node addresses set in the Talos machine config ([ADR-007](adr/007-configure-static-node-addresses.md))
+- Static node addresses, to be set in the Talos machine config ([ADR-007](adr/007-configure-static-node-addresses.md))
 - DNS via router and public DNS
 
 ### Future Network
