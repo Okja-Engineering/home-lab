@@ -27,7 +27,7 @@ The control plane consists of 3 Talos Linux nodes:
 - **OS:** Talos Linux
 - **Kubernetes Version:** v1.31.0 (planned)
 - **Talos Version:** v1.8.0 (planned)
-- **CNI:** Cilium, installed during bootstrap in place of kube-proxy ([ADR-005](adr/005-use-cilium-with-kube-proxy-replacement.md))
+- **CNI:** Cilium with kube-proxy replacement, to be installed as part of bootstrap ([ADR-005](adr/005-use-cilium-with-kube-proxy-replacement.md))
 - **Etcd:** Embedded in control plane nodes
 
 ### High Availability
