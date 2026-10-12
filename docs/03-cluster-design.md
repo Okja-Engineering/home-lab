@@ -110,7 +110,7 @@ Worker nodes will be added after:
 
 - **Cilium features beyond the CNI:** Network policy, observability
 - **cert-manager:** Certificate management
-- **Ingress Controller:** NGINX or Gateway API
+- **Ingress:** Cilium Gateway API ([ADR-012](adr/012-use-cilium-gateway-api-for-ingress.md))
 - **external-secrets:** Secret synchronization
 - **Flux:** GitOps operator
 - **Prometheus/Grafana:** Monitoring
@@ -154,13 +154,13 @@ Worker nodes will be added after:
 - No SSH access to nodes
 - API access restricted to local subnet
 - Secrets not committed to Git
+- Pod Security Admission, which Talos enables by default (PodSecurityPolicy, which it replaced, was removed in Kubernetes 1.25)
+- Kubernetes Secret encryption at rest, which Talos enables by default
 
 ### Future Security
 
 - RBAC policies
 - Network policies
-- Pod security policies
-- Secret encryption at rest
 - Certificate rotation
 
 ## Scalability Considerations
