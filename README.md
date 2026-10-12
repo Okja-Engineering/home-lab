@@ -69,7 +69,7 @@ Talos Linux configuration is located in `platform/talos/`. This includes:
 
 See [platform/talos/README.md](platform/talos/README.md) for details.
 
-The bootstrap runbooks are in [docs/runbooks/](docs/runbooks/). They have not been updated for ADR-005 to ADR-013 yet: where a runbook disagrees with an [ADR](docs/adr/README.md), the ADR is current. [Issue 22](https://github.com/Okja-Engineering/home-lab/issues/22) rewrites them.
+The bootstrap runbooks are in [docs/runbooks/](docs/runbooks/). They have not been updated for ADR-005 to ADR-013 yet: where a runbook disagrees with an [ADR](docs/adr/README.md), the ADR is current. [Issue 22](https://github.com/Okja-Engineering/home-lab/issues/22) will rewrite them.
 
 ## Security
 
