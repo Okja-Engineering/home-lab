@@ -81,6 +81,13 @@ This repository follows strict security practices:
 
 See [platform/talos/README.md](platform/talos/README.md) for detailed security policies.
 
+### Secret scanning
+
+Anything that gets past `.gitignore` is checked by [gitleaks](https://github.com/gitleaks/gitleaks). Its configuration, `.gitleaks.toml`, keeps the default rules and adds two for Talos: base64-encoded PEM blocks, and files named `secrets.yaml`, `controlplane.yaml`, `worker.yaml`, `talosconfig` or `kubeconfig`.
+
+- **Before each commit:** a pre-commit hook scans the staged changes. Set it up once per clone: install [pre-commit](https://pre-commit.com/#install), then run `pre-commit install` in the repository root.
+- **On every pull request and on pushes to `main`:** the `Secret scan` workflow (`.github/workflows/secret-scan.yml`) scans the commit history.
+
 ## GitHub Workflow
 
 GitHub Milestone 1 (Talos Control Plane Foundation) and its issues were created using local bootstrap artifacts (`.github/milestones/`, `.github/issues/`, and `scripts/github/create-control-plane-foundation-issues.sh`). These files were used as temporary inputs to create the actual GitHub resources via the `gh` CLI and are not tracked in the repository.
