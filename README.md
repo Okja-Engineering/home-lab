@@ -83,10 +83,19 @@ See [platform/talos/README.md](platform/talos/README.md) for detailed security p
 
 ### Secret scanning
 
-Anything that gets past `.gitignore` is checked by [gitleaks](https://github.com/gitleaks/gitleaks). Its configuration, `.gitleaks.toml`, keeps the default rules and adds two for Talos: base64-encoded PEM blocks, and files named `secrets.yaml`, `controlplane.yaml`, `worker.yaml`, `talosconfig` or `kubeconfig`.
+[gitleaks](https://github.com/gitleaks/gitleaks) checks the text changes that get past `.gitignore`. `scripts/secret-scan.sh` runs it with two rule sets:
+
+- `.gitleaks-talos.toml` holds the rules for what `talosctl` and `kubectl` write: base64-encoded PEM blocks, PEM private keys, bootstrap and trustd tokens, a 32-byte base64 secret (such as the cluster secret) as the value of a field, and files named `secrets.yaml`, `controlplane.yaml`, `worker.yaml`, `talosconfig` or `kubeconfig`. These rules have no allowlist: they apply to every path except that rules file itself.
+- `.gitleaks.toml` holds gitleaks' default rules. They come with gitleaks' default allowlist, which exempts some paths from them, such as the common lock files and `node_modules/`.
+
+The scan runs in two places:
 
 - **Before each commit:** a pre-commit hook scans the staged changes. Set it up once per clone: install [pre-commit](https://pre-commit.com/#install), then run `pre-commit install` in the repository root.
-- **On every pull request and on pushes to `main`:** the `Secret scan` workflow (`.github/workflows/secret-scan.yml`) scans the commit history.
+- **On every pull request and on pushes to `main`:** the `Secret scan` workflow (`.github/workflows/secret-scan.yml`) scans the commit history, including what a merge commit adds.
+
+gitleaks scans only the lines that a text diff adds. It does not scan binary files and does not look inside archives, so an etcd snapshot is protected by the `*.snapshot` rule in `.gitignore` alone.
+
+This repository is public. If the workflow's scan fails on a real secret, that secret is already published: treat it as compromised and regenerate it. Deleting the commit is not enough.
 
 ## GitHub Workflow
 
