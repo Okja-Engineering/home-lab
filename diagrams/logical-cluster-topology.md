@@ -13,7 +13,7 @@ The phases are defined in [Goals](../docs/00-goals.md#phases).
 ```mermaid
 graph TB
     Workstation[Workstation<br/>talosctl/kubectl]
-    Endpoint[k8s.lab.home.arpa:6443<br/>Cluster Endpoint<br/>192.168.1.21]
+    VIP[Kubernetes API endpoint<br/>Talos shared VIP<br/>192.168.1.20:6443<br/>Held by one node at a time]
     cp01[cp-01<br/>192.168.1.21<br/>Talos + kubelet + etcd<br/>Target]
     cp02[cp-02<br/>192.168.1.22<br/>Talos + kubelet + etcd<br/>Target]
     cp03[cp-03<br/>192.168.1.23<br/>Talos + kubelet + etcd<br/>Target]
@@ -22,24 +22,22 @@ graph TB
     apiserver[kube-apiserver]
     scheduler[kube-scheduler]
     controller[kube-controller-manager]
-    Cilium[Cilium CNI<br/>Planned<br/>Not installed]
+    Cilium[Cilium CNI<br/>Pod and Service networking<br/>Target]
     Flux[Flux GitOps<br/>Planned<br/>Deferred until control-plane healthy]
     Platform[Platform Services<br/>Ingress/Monitoring<br/>Planned/Deferred]
     Apps[Applications<br/>Planned/Deferred]
     Workers[Worker Nodes<br/>Stateful/Platform/GPU<br/>Deferred]
 
-    Workstation --> Endpoint
-    Endpoint --> cp01
-    Endpoint --> cp02
-    Endpoint --> cp03
-    cp01 --> etcd
-    cp02 --> etcd
-    cp03 --> etcd
-    etcd --> k8s
+    Workstation --> VIP
+    VIP --> cp01
+    cp01 --> k8s
+    cp02 --> k8s
+    cp03 --> k8s
     k8s --> apiserver
     k8s --> scheduler
     k8s --> controller
-    apiserver -.-> Cilium
+    apiserver --> etcd
+    apiserver --> Cilium
     apiserver -.-> Flux
     apiserver -.-> Platform
     Platform -.-> Apps
@@ -49,12 +47,19 @@ graph TB
     classDef planned fill:#FFD700,stroke:#DAA520,stroke-width:2px,stroke-dasharray: 5 5
     classDef future fill:#D3D3D3,stroke:#808080,stroke-width:2px,stroke-dasharray: 2 2
 
-    class Workstation,Endpoint,cp01,cp02,cp03,etcd,k8s,apiserver,scheduler,controller target
-    class Cilium,Flux,Platform,Apps planned
+    class Workstation,VIP,cp01,cp02,cp03,etcd,k8s,apiserver,scheduler,controller,Cilium target
+    class Flux,Platform,Apps planned
     class Workers future
 ```
 
 **Phase 2 Target:** Three-node Talos control plane with etcd quorum (not yet built)
+
+Reading the diagram:
+
+- **Endpoint:** kubectl reaches the Kubernetes API through a Talos shared VIP, which one healthy control-plane node holds at a time ([ADR-006](../docs/adr/006-use-talos-vip-for-kubernetes-api-endpoint.md)). The diagram draws it on cp-01 as an example; cp-02 or cp-03 can hold it instead. talosctl does not use the VIP: it connects to each node's own address.
+- **State:** Each node runs the control plane components and one etcd member. kube-apiserver reads and writes cluster state in etcd.
+- **CNI:** Cilium is installed during bootstrap and replaces kube-proxy ([ADR-005](../docs/adr/005-use-cilium-with-kube-proxy-replacement.md)).
+- **Addresses:** The VIP and node addresses are the planned values from ADR-006 and [ADR-007](../docs/adr/007-configure-static-node-addresses.md). They are not yet confirmed on the router.
 
 ## Control Plane Components
 
@@ -62,7 +67,7 @@ graph TB
 
 - **Talos Linux:** Immutable OS
 - **kubelet:** Kubernetes node agent
-- **kube-proxy:** Network proxy
+- **Cilium:** CNI and kube-proxy replacement; kube-proxy is not deployed ([ADR-005](../docs/adr/005-use-cilium-with-kube-proxy-replacement.md))
 - **etcd:** Distributed key-value store (clustered across 3 nodes)
 
 ### Control Plane Components
@@ -72,9 +77,7 @@ graph TB
 - **kube-controller-manager:** Controller loops
 - **cloud-controller-manager:** (not used in bare metal)
 
-## Future Components
-
-### CNI (Planned)
+### CNI (Part of Bootstrap)
 
 ```
                 +-------+
@@ -88,6 +91,8 @@ graph TB
     | cp-01 |   | cp-02 |   | cp-03 |
     +---+---+   +---+---+   +---+---+
 ```
+
+## Future Components
 
 ### Platform Services (Planned)
 
@@ -152,25 +157,26 @@ graph TB
 2. kube-apiserver validates request
 3. kube-scheduler assigns node
 4. kubelet on node creates pod
-5. Cilium provides networking
-6. kube-proxy provides service proxying
+5. Cilium provides pod networking and Service proxying; there is no kube-proxy ([ADR-005](../docs/adr/005-use-cilium-with-kube-proxy-replacement.md))
 
 ## Network Layers
 
-### Layer 1: Physical
+These groups are informal. They are not OSI layer numbers.
+
+### Physical
 
 - Ethernet connections between devices
 - Switch aggregation
 - Router gateway
 
-### Layer 2: Logical
+### Logical
 
 - Talos API (port 50000)
 - Kubernetes API (port 6443)
 - Cilium CNI (VXLAN or Geneve)
 - Service networking (ClusterIP, NodePort, LoadBalancer)
 
-### Layer 3: Services
+### Services
 
 - Ingress controller (HTTP/HTTPS)
 - Service discovery (DNS)
@@ -180,7 +186,7 @@ graph TB
 
 - Current topology is control plane only
 - No worker nodes yet
-- Cilium CNI is planned but not installed
+- Cilium is part of the Phase 2 target ([ADR-005](../docs/adr/005-use-cilium-with-kube-proxy-replacement.md)); like the rest of the target, it is not yet built
 - Platform services are planned but not installed
 - Monitoring stack is planned but not installed
 - Worker nodes are deferred until control plane is stable
