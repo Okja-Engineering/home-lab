@@ -28,3 +28,9 @@ Worker placement, stateful/stateless workload separation, and AI/GPU workloads a
 ## Review Notes
 
 Revisit this decision if hardware constraints become an issue or if the three-node setup proves too complex for the learning objectives. Consider scaling to five nodes if higher availability is needed in the future.
+
+## Clarifying Note
+
+Added 2026-10-12. The accepted text above is unchanged.
+
+"The first infrastructure milestone" under Impact means the three-node control plane, which is Phase 2 in the [phase scheme](../00-goals.md#phases). It does not mean the GitHub milestone "Milestone 1: Talos Control Plane Foundation", which was the planning foundation (Phase 1).
