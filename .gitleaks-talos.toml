@@ -12,21 +12,58 @@
 # these rules apply to every text change gitleaks is given. The one exception
 # is this file: gitleaks does not apply a config to the file it was loaded
 # from.
+#
+# Each content rule is keyed on the shape of the value, not on the name of the
+# field that holds it, so a Talos release that renames or moves a field does
+# not get past it. Where a rule has a capture group, the group is the value:
+# gitleaks treats the first capture group as the secret, and that is what
+# --redact hides in output.
 
 title = "home-lab gitleaks config: Talos rules"
 
-# talosctl and kubectl write keys and certificates as base64-encoded PEM, so
-# the value starts with the base64 form of the PEM "BEGIN" marker, not with the
-# marker itself. The capture group is the value: gitleaks treats the first
-# capture group as the secret, and that is what --redact hides in output.
+# talosctl (v1alpha1 machine config, secrets bundle, talosconfig) and kubectl
+# (kubeconfig) write keys and certificates as base64-encoded PEM on one line,
+# so the value starts with the base64 form of the PEM "BEGIN" marker and goes
+# on with at least one more base64 character. A certificate matches as well as
+# a key: the rule does not tell them apart.
 [[rules]]
 id = "talos-base64-pem"
 description = "Base64-encoded PEM block (Talos secrets, machine config or kubeconfig)"
-regex = '''(?i)\b(?:key|crt|client-key-data):\s*["']?(LS0tLS1CRUdJTi[a-z0-9+/]*={0,2})'''
+regex = '''(?i)(LS0tLS1CRUdJTi[a-z0-9+/]+={0,2})'''
+
+# The config documents added in Talos v1.14 (KubeAPIServerCAConfig and others)
+# hold a key as PEM text in a YAML block scalar, not as base64. This is the
+# pattern of gitleaks' own default "private-key" rule, repeated here because
+# the default rule comes with the default allowlist.
+[[rules]]
+id = "talos-pem-private-key"
+description = "PEM private key (how Talos v1.14 config documents hold keys)"
+regex = '''(?i)-----BEGIN[ A-Z0-9_-]{0,100}PRIVATE KEY(?: BLOCK)?-----[\s\S-]{64,}?KEY(?: BLOCK)?-----'''
+
+# A bootstrap token or trustd token: six characters, a dot and sixteen
+# characters, all lower-case letters or digits (the kubeadm token format).
+# Matched wherever it stands on its own, in any file and after any field name;
+# not matched inside a longer word, dotted name or path.
+[[rules]]
+id = "talos-token"
+description = "Talos bootstrap or trustd token"
+regex = '''(?m)(?:^|[^\w./\n-])([a-z0-9]{6}\.[a-z0-9]{16})(?:[^\w./-]|$)'''
+
+# The cluster secret and the secretbox (or AES-CBC) encryption secret: 32
+# random bytes in base64, which is always 43 characters and one "=". A SHA-256
+# digest in base64 has the same shape, so the value alone does not identify a
+# secret. The rule therefore matches it only as the value of a "name: value"
+# line, whatever the name is, which is how talosctl writes it. The same value
+# in a block scalar, behind a YAML anchor, after "=" or in prose is not
+# matched.
+[[rules]]
+id = "talos-base64-secret"
+description = "32 random bytes in base64 as the value of a field (Talos cluster or encryption secret)"
+regex = ''':[ \t]+["']?([A-Za-z0-9+/]{43}=)(?:[^A-Za-z0-9+/=]|$)'''
 
 # The file names talosctl gives its output by default, plus kubeconfig.
 # .gitignore ignores them; this catches one that was committed anyway, for
-# example with `git add -f`.
+# example with `git add -f`. This rule is the only one keyed on a name.
 [[rules]]
 id = "talos-generated-file"
 description = "Unencrypted talosctl output committed"
