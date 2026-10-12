@@ -4,7 +4,7 @@
 
 - **Cluster Name:** home-prod
 - **Domain:** lab.home.arpa (provisional)
-- **Cluster Endpoint:** k8s.lab.home.arpa:6443
+- **Cluster Endpoint:** A Talos shared virtual IP (VIP) on port 6443, not a DNS name ([ADR-006](adr/006-use-talos-vip-for-kubernetes-api-endpoint.md))
 - **Environment:** Production home lab
 
 See [Logical Cluster Topology](../diagrams/logical-cluster-topology.md) for a visual representation of the cluster architecture.
@@ -136,7 +136,7 @@ Worker nodes will be added after:
 
 - Flat network (192.168.1.0/24)
 - No VLANs initially
-- Simple DHCP reservations
+- Static node addresses set in the Talos machine config ([ADR-007](adr/007-configure-static-node-addresses.md))
 - DNS via router and public DNS
 
 ### Future Network
