@@ -36,11 +36,19 @@ case "$mode" in
     ;;
   history)
     # gitleaks runs `git log -p -U0` with these options, split on single
-    # spaces. They are gitleaks' own default, "--full-history --all
-    # --diff-filter=tuxdb", with --all replaced by HEAD: --all would also read
-    # every other branch the checkout fetched and fail this scan for a
-    # finding on an unrelated one.
-    set -- "--log-opts=--full-history --diff-filter=tuxdb HEAD"
+    # spaces. That prints, for every commit reachable from HEAD, the lines it
+    # adds; for a merge commit, the lines it adds to its first parent, which
+    # include anything the merge itself introduced. Not printed, and so not
+    # scanned: commits that HEAD is not built on (other branches, tags, commits
+    # removed by a force-push), and a path whose type changes in that commit,
+    # such as a symlink replaced by a file (the "t" in --diff-filter).
+    #
+    # gitleaks' own default is "--full-history --all --diff-filter=tuxdb".
+    # HEAD replaces --all, which would also read every other branch the
+    # checkout fetched and fail this scan for a finding on an unrelated one.
+    # --diff-merges=first-parent is added because git prints no diff at all
+    # for a merge commit without it.
+    set -- "--log-opts=--full-history --diff-merges=first-parent --diff-filter=tuxdb HEAD"
     commits='[1-9][0-9]*'
     ;;
   *)
