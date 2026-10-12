@@ -83,7 +83,7 @@ See [platform/talos/README.md](platform/talos/README.md) for detailed security p
 
 ## GitHub Workflow
 
-The GitHub milestone and issues for this project were created using local bootstrap artifacts (`.github/milestones/`, `.github/issues/`, and `scripts/github/create-control-plane-foundation-issues.sh`). These files were used as temporary inputs to create the actual GitHub resources via the `gh` CLI and are not tracked in the repository.
+GitHub Milestone 1 (Talos Control Plane Foundation) and its issues were created using local bootstrap artifacts (`.github/milestones/`, `.github/issues/`, and `scripts/github/create-control-plane-foundation-issues.sh`). These files were used as temporary inputs to create the actual GitHub resources via the `gh` CLI and are not tracked in the repository.
 
 ## License
 
