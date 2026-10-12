@@ -65,10 +65,11 @@ The following are intentionally deferred until after the control plane is health
 Talos Linux configuration is located in `platform/talos/`. This includes:
 
 - Cluster metadata and patches
-- Bootstrap runbooks
 - Security documentation
 
 See [platform/talos/README.md](platform/talos/README.md) for details.
+
+The bootstrap runbooks are in [docs/runbooks/](docs/runbooks/).
 
 ## Security
 
