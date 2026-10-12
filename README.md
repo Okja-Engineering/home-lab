@@ -33,7 +33,7 @@ The current work in Phase 2 is cp-01 Talos discovery:
 - **Network:** Flat network initially, VLANs deferred
 - **GitOps:** Flux (planned, after cluster is healthy)
 - **CNI:** Cilium with kube-proxy replacement, to be installed as part of bootstrap ([ADR-005](docs/adr/005-use-cilium-with-kube-proxy-replacement.md))
-- **Ingress:** TBD (planned)
+- **Ingress:** Cilium Gateway API, planned for Phase 3 ([ADR-012](docs/adr/012-use-cilium-gateway-api-for-ingress.md))
 - **Storage:** TBD (planned)
 - **Monitoring:** TBD (planned)
 
