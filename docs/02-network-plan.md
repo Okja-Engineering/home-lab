@@ -71,7 +71,7 @@ Do not record MAC addresses in this repository. ADR-007 selects network ports wi
 
 - **Role:** Management workstation for cluster operations
 - **Network:** Connected to same 192.168.1.0/24 subnet
-- **Access:** SSH to nodes, kubectl access via kubeconfig
+- **Access:** talosctl to the nodes, not SSH ([ADR-001](adr/001-use-talos-linux.md)); kubectl access via kubeconfig
 
 ## Network Topology
 
