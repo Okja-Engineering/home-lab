@@ -56,13 +56,13 @@ This phase is complete. It was tracked in the GitHub milestone "Milestone 1: Tal
 ### Phase 2: Three-Node Control Plane
 
 - All 3 control plane nodes are running Talos
+- Cilium is installed as the CNI during bootstrap ([ADR-005](adr/005-use-cilium-with-kube-proxy-replacement.md))
 - Kubernetes cluster is healthy
 - etcd quorum is stable
 - kubectl access is working from workstation
 
 ### Phase 3: Platform Services
 
-- Cilium CNI is installed
 - Ingress controller is operational
 - Storage classes are configured
 - Monitoring stack is collecting metrics
