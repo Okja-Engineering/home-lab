@@ -28,7 +28,10 @@ graph TB
     Apps[Applications<br/>Planned/Deferred]
     Workers[Worker Nodes<br/>Stateful/Platform/GPU<br/>Deferred]
 
-    Workstation --> VIP
+    Workstation -->|kubectl| VIP
+    Workstation -->|talosctl| cp01
+    Workstation -->|talosctl| cp02
+    Workstation -->|talosctl| cp03
     VIP --> cp01
     cp01 --> k8s
     cp02 --> k8s
@@ -56,7 +59,7 @@ graph TB
 
 Reading the diagram:
 
-- **Endpoint:** kubectl reaches the Kubernetes API through a Talos shared VIP, which one healthy control-plane node holds at a time ([ADR-006](../docs/adr/006-use-talos-vip-for-kubernetes-api-endpoint.md)). The diagram draws it on cp-01 as an example; cp-02 or cp-03 can hold it instead. talosctl does not use the VIP: it connects to each node's own address.
+- **Endpoint:** The edge labelled kubectl goes to the Kubernetes API endpoint, a Talos shared VIP that one healthy control-plane node holds at a time. The diagram draws the VIP on cp-01 as an example; cp-02 or cp-03 can hold it instead. The edges labelled talosctl go to each node's own address: talosctl never uses the VIP ([ADR-006](../docs/adr/006-use-talos-vip-for-kubernetes-api-endpoint.md)).
 - **State:** Each node runs the control plane components and one etcd member. kube-apiserver reads and writes cluster state in etcd.
 - **CNI:** Cilium is installed during bootstrap and replaces kube-proxy ([ADR-005](../docs/adr/005-use-cilium-with-kube-proxy-replacement.md)).
 - **Addresses:** The VIP and node addresses are the planned values from ADR-006 and [ADR-007](../docs/adr/007-configure-static-node-addresses.md). They are not yet confirmed on the router.
