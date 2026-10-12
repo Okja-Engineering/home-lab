@@ -65,6 +65,6 @@ Worker nodes will be added after the control plane is stable. Categories:
 ## Notes
 
 - Hardware specifications are placeholders until physically inspected
-- MAC addresses are not needed for addressing, because the node addresses are static ([ADR-007](adr/007-configure-static-node-addresses.md))
+- MAC addresses are not needed: under [ADR-007](adr/007-configure-static-node-addresses.md), node addresses are static and network ports are selected without MAC addresses
 - Serial numbers are optional but useful for warranty tracking
 - Do not commit sensitive hardware details (e.g., MAC addresses) if repo becomes public
