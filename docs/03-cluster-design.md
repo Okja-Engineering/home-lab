@@ -39,7 +39,9 @@ The control plane consists of 3 Talos Linux nodes:
 
 ## Current Scope
 
-### In Scope (Phase 1)
+The phases are defined in [Goals](00-goals.md#phases). Phase 1, the repository foundation, is complete, so the current scope is Phase 2.
+
+### In Scope (Phase 2)
 
 - 3-node Talos Linux control plane
 - Kubernetes cluster bootstrap
@@ -47,12 +49,15 @@ The control plane consists of 3 Talos Linux nodes:
 - Control plane health validation
 - Documentation and runbooks
 
-### In Scope (Phase 2 - Planned)
+### In Scope (Phase 3 - Planned)
 
 - Cilium CNI installation
 - Ingress controller
 - Storage classes
 - Basic monitoring
+
+### In Scope (Phase 4 - Planned)
+
 - GitOps with Flux
 
 ### Out of Scope (Deferred)
@@ -117,7 +122,7 @@ Worker nodes will be added after:
 
 ### Current Phase
 
-- No persistent storage in initial control plane phase
+- No persistent storage in Phase 2
 - Control plane uses local disk for etcd
 - No CSI drivers initially
 

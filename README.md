@@ -13,11 +13,11 @@ This repository serves two goals:
 
 ## Current Status
 
-**Phase: cp-01 Talos Discovery**
+**Phase 2: Three-Node Control Plane** (the phases are defined in [Goals](docs/00-goals.md#phases))
 
-Milestone 1 (Talos Control Plane Foundation) is complete. The repo has planning docs, ADRs, diagrams, network plan, Talos source structure, and bootstrap runbooks.
+Phase 1 is done: Milestone 1 (Talos Control Plane Foundation) is complete. The repo has planning docs, ADRs, diagrams, network plan, Talos source structure, and bootstrap runbooks.
 
-The current phase is cp-01 Talos Discovery:
+The current work in Phase 2 is cp-01 Talos discovery:
 - Physically boot cp-01 into Talos maintenance mode
 - Confirm hardware and network facts
 - Identify network interface and install disk
@@ -41,7 +41,7 @@ The current phase is cp-01 Talos Discovery:
 
 The following are intentionally deferred until after the control plane is healthy and stable:
 
-- **Worker nodes** - No worker nodes in initial milestone
+- **Worker nodes** - No worker nodes in Phase 2
 - **Flux/GitOps** - Deferred until control plane is healthy
 - **Cilium CNI** - Planned but not yet implemented
 - **Ingress controller** - Planned but not yet implemented
