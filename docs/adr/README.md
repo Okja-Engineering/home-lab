@@ -49,7 +49,7 @@ This home lab is both an operational platform and a learning portfolio. ADRs hel
 
 To create a new ADR:
 
-1. Copy `000-template.md` to a new file with the next sequential number (e.g., `005-decision-name.md`)
+1. Copy `000-template.md` to a new file named `NNN-decision-name.md`, where `NNN` is the next number after the last ADR in the index above
 2. Fill in the template sections in plain English
 3. Keep each ADR focused on a single decision
 4. Update this README's index table
