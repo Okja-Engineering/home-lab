@@ -56,8 +56,12 @@ case "$mode" in
     ;;
 esac
 
-# The rule sets to apply, one pass over the changes for each.
-configs='.gitleaks.toml'
+# Two passes over the same changes, one per rule set:
+#   .gitleaks-talos.toml  the Talos rules, which have no allowlist and so
+#                         apply to every path
+#   .gitleaks.toml        gitleaks' default rules, with gitleaks' default
+#                         allowlist of paths
+configs='.gitleaks-talos.toml .gitleaks.toml'
 
 cd "$(git rev-parse --show-toplevel)"
 
