@@ -34,7 +34,12 @@ jobs:
           # Pull requests and pushes check relative links only: --offline checks
           # local files and blocks network requests. The scheduled run leaves it
           # out, so it checks external links as well.
+          # Two kinds of URL are never requested in either mode. URLs in code
+          # spans and code blocks: lychee skips those unless --include-verbatim
+          # is set, so it is not set. Private, link-local and loopback
+          # addresses: excluded by --exclude-all-private.
           args: >-
             --no-progress
+            --exclude-all-private
             ${{ github.event_name != 'schedule' && '--offline' || '' }}
             .
