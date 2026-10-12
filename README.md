@@ -1,5 +1,7 @@
 # Home Lab
 
+[![Validate](https://github.com/Okja-Engineering/home-lab/actions/workflows/validate.yml/badge.svg?branch=main&event=push)](https://github.com/Okja-Engineering/home-lab/actions/workflows/validate.yml)
+
 A GitHub-backed home lab repository that documents and eventually automates a local Kubernetes platform for learning and portfolio development.
 
 ## Purpose
