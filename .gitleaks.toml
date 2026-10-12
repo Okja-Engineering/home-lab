@@ -1,28 +1,17 @@
-# Gitleaks configuration for this repository.
+# Default rules for gitleaks.
 #
-# Read by the pre-commit hook (.pre-commit-config.yaml) and by the CI scan
-# (.github/workflows/secret-scan.yml). Written and checked against gitleaks
+# One of the two rule sets that scripts/secret-scan.sh applies, for the
+# pre-commit hook and for the CI scan alike. The other is
+# .gitleaks-talos.toml, the Talos rules. Written and checked against gitleaks
 # v8.30.1, the version both of them pin.
+#
+# Extending the default config brings in every default rule and also the
+# default allowlist, which exempts some paths from all of these rules (the
+# common lock files, node_modules/, some vendor/ trees, names ending in .v2,
+# .bin or .pdf, and more). That is why the Talos rules are not in this file:
+# they must apply to every path.
 
-title = "home-lab gitleaks config"
+title = "home-lab gitleaks config: default rules"
 
 [extend]
-# Keep every default gitleaks rule and add the Talos-specific ones below.
 useDefault = true
-
-# talosctl and kubectl write keys and certificates as base64-encoded PEM, so
-# the value starts with the base64 form of the PEM "BEGIN" marker, not with the
-# marker itself. The capture group is the value: gitleaks treats the first
-# capture group as the secret, and that is what --redact hides in output.
-[[rules]]
-id = "talos-base64-pem"
-description = "Base64-encoded PEM block (Talos secrets, machine config or kubeconfig)"
-regex = '''(?i)\b(?:key|crt|client-key-data):\s*["']?(LS0tLS1CRUdJTi[a-z0-9+/]*={0,2})'''
-
-# The file names talosctl gives its output by default, plus kubeconfig.
-# .gitignore ignores them; this catches one that was committed anyway, for
-# example with `git add -f`.
-[[rules]]
-id = "talos-generated-file"
-description = "Unencrypted talosctl output committed"
-path = '''(^|/)(secrets|controlplane|worker)\.yaml$|(^|/)(talosconfig|kubeconfig)$'''
