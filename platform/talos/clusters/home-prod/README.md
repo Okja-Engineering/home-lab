@@ -7,7 +7,7 @@ Talos Linux cluster configuration for home production environment.
 - **Name**: home-prod
 - **Domain**: lab.home.arpa
 - **Control Plane Nodes**: 3
-- **Endpoint**: k8s.lab.home.arpa
+- **Endpoint**: A Talos shared virtual IP (VIP) on port 6443, not a DNS name ([ADR-006](../../../../docs/adr/006-use-talos-vip-for-kubernetes-api-endpoint.md))
 
 ## Node IPs
 

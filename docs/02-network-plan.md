@@ -18,7 +18,7 @@ See [Physical Topology](../diagrams/physical-topology.md) for a visual represent
 
 ### Control Plane IP Addresses (Planned)
 
-Control plane IP addresses are planned but not yet confirmed via DHCP reservations:
+Control plane IP addresses are planned static addresses ([ADR-007](adr/007-configure-static-node-addresses.md)). They are not yet confirmed on the router:
 
 | Node | Planned IP | Status |
 |---|---|---|
@@ -26,33 +26,28 @@ Control plane IP addresses are planned but not yet confirmed via DHCP reservatio
 | cp-02 | 192.168.1.22 | Planned / Unconfirmed |
 | cp-03 | 192.168.1.23 | Planned / Unconfirmed |
 
-**Action Required:** Reserve these IPs in the router or Omada controller before Talos installation.
+**Action Required:** Complete the router check under [Node Addressing](#node-addressing) before Talos installation.
 
 ### Cluster Endpoint
 
-- **Cluster Endpoint DNS:** k8s.lab.home.arpa
-- **Cluster Endpoint IP:** 192.168.1.21 (initially points to cp-01)
+- **Cluster Endpoint:** A Talos shared virtual IP (VIP), not a DNS record pointing at cp-01 ([ADR-006](adr/006-use-talos-vip-for-kubernetes-api-endpoint.md))
 - **Port:** 6443
 
-The cluster endpoint should be configured as a DNS A record. In the future, this may point to a VIP or load balancer.
+The VIP address is given in ADR-006. Like the node addresses, it is planned and not yet confirmed on the router.
 
-## DHCP Reservations
+## Node Addressing
 
-### Required Reservations
+The nodes will not use DHCP reservations. Each node's address will be set in its Talos machine config ([ADR-007](adr/007-configure-static-node-addresses.md)).
 
-Before Talos installation, configure DHCP reservations for:
+### Router Check Before Talos Installation
 
-- **cp-01:** 192.168.1.21
-- **cp-02:** 192.168.1.22
-- **cp-03:** 192.168.1.23
+The address plan has not been checked against the router yet. Before Talos installation:
 
-### Reservation Process
+1. Log into router or Omada controller
+2. Confirm the DHCP pool does not include the node addresses or the cluster VIP
+3. Confirm no other device is using those addresses
 
-1. Identify MAC addresses of each GMKtec mini PC
-2. Log into router or Omada controller
-3. Create static DHCP reservations
-4. Verify reservations are working (test with DHCP client)
-5. Document MAC addresses in hardware inventory
+Do not record MAC addresses in this repository. ADR-007 selects network ports without them.
 
 ## Network Equipment
 
@@ -106,7 +101,7 @@ cp-01 cp-02 cp-03 Workstation
 ### DNS Records to Create
 
 1. **Cluster Endpoint:**
-   - `k8s.lab.home.arpa` → 192.168.1.21
+   - None required: the endpoint is the VIP, an IP address. [ADR-006](adr/006-use-talos-vip-for-kubernetes-api-endpoint.md) says what the `k8s.lab.home.arpa` name may still be used for.
 
 2. **Future Service Records:**
    - Service DNS will be configured after cluster bootstrap
@@ -150,6 +145,6 @@ VLANs will be implemented after the control plane is stable. Potential VLANs:
 
 - Flat network is simpler for initial bootstrap
 - VLANs add complexity and should be deferred
-- DHCP reservations are critical for stable control plane operation
+- Stable node addresses are critical for control plane operation, which is why they are static ([ADR-007](adr/007-configure-static-node-addresses.md))
 - Domain is internal only, no public DNS assumed
 - Omada switch installation is pending but not blocking initial bootstrap

@@ -12,13 +12,13 @@ The control plane consists of 3 GMKtec mini PCs. Exact specifications will be fi
 
 ## Planned IP Addresses
 
-Control plane IP addresses are planned but not yet confirmed via DHCP reservations:
+Control plane IP addresses are planned static addresses ([ADR-007](adr/007-configure-static-node-addresses.md)). They are not yet confirmed on the router:
 
 - **cp-01:** 192.168.1.21
 - **cp-02:** 192.168.1.22
 - **cp-03:** 192.168.1.23
 
-These addresses should be reserved in the router or Omada controller before Talos installation.
+Each address will be set in the node's Talos machine config, not reserved in DHCP. The router check to do before Talos installation is in the [Network Plan](02-network-plan.md#node-addressing).
 
 ## Hardware Details to Collect
 
@@ -65,6 +65,6 @@ Worker nodes will be added after the control plane is stable. Categories:
 ## Notes
 
 - Hardware specifications are placeholders until physically inspected
-- MAC addresses are optional but useful for DHCP reservations
+- MAC addresses are not needed for addressing, because the node addresses are static ([ADR-007](adr/007-configure-static-node-addresses.md))
 - Serial numbers are optional but useful for warranty tracking
 - Do not commit sensitive hardware details (e.g., MAC addresses) if repo becomes public
