@@ -28,3 +28,9 @@ VLAN segmentation, firewall policy, and advanced switch configuration are deferr
 ## Review Notes
 
 Revisit this decision after the control plane is stable and healthy. Consider implementing VLANs when adding worker nodes or when security requirements become clearer.
+
+## Clarifying Note
+
+Added 2026-10-12. The accepted text above is unchanged.
+
+"The first milestone" under Impact means the three-node control plane, which is Phase 2 in the [phase scheme](../00-goals.md#phases). It does not mean the GitHub milestone "Milestone 1: Talos Control Plane Foundation", which was the planning foundation (Phase 1).
