@@ -418,7 +418,7 @@ This runbook is complete when:
 ## Links
 
 - [cp-01 Talos Bootstrap Runbook](cp-01-talos-bootstrap.md) - Detailed cp-01 discovery and bootstrap
-- [platform/talos/clusters/home-prod/README.md](../../platform/talos/clusters/home-prod/README.md) - Cluster configuration and high-level bootstrap plan
+- [platform/talos/clusters/home-prod/README.md](../../../platform/talos/clusters/home-prod/README.md) - Cluster configuration and high-level bootstrap plan
 - [docs/02-network-plan.md](../02-network-plan.md) - Network topology and IP addressing
 - [docs/03-cluster-design.md](../03-cluster-design.md) - Cluster architecture and scope
 
