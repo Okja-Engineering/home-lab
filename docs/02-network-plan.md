@@ -145,6 +145,6 @@ VLANs will be implemented after the control plane is stable. Potential VLANs:
 
 - Flat network is simpler for initial bootstrap
 - VLANs add complexity and should be deferred
-- Stable node addresses are critical for control plane operation, which is why they are static ([ADR-007](adr/007-configure-static-node-addresses.md))
+- Stable node addresses are critical for control plane operation; [ADR-007](adr/007-configure-static-node-addresses.md) says why, and how the addresses are assigned
 - Domain is internal only, no public DNS assumed
 - Omada switch installation is pending but not blocking initial bootstrap
