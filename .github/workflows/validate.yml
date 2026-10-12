@@ -1,0 +1,40 @@
+name: Validate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  schedule:
+    # Mondays at 06:17 UTC. This is the run that also checks external links.
+    - cron: "17 6 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  yaml-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Lint YAML
+        run: pipx run --spec yamllint==1.38.0 yamllint .
+
+  links:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1  # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Check links
+        uses: lycheeverse/lychee-action@e7477775783ea5526144ba13e8db5eec57747ce8  # v2.9.0
+        with:
+          # Pull requests and pushes check relative links only: --offline checks
+          # local files and blocks network requests. The scheduled run leaves it
+          # out, so it checks external links as well.
+          args: >-
+            --no-progress
+            ${{ github.event_name != 'schedule' && '--offline' || '' }}
+            .
