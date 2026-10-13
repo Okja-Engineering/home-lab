@@ -9,9 +9,10 @@
 # the default config also imports its allowlist, and a path on that allowlist
 # (a name ending in .v2, .bin or .pdf, the common lock files, node_modules/,
 # some vendor/ trees, and more) is exempt from every rule. With no allowlist
-# these rules apply to every text change gitleaks is given. The one exception
-# is this file: gitleaks does not apply a config to the file it was loaded
-# from.
+# these rules apply to every text change gitleaks is given, a change to this
+# file included: scripts/secret-scan.sh names this config in a way that keeps
+# gitleaks from skipping the file it was loaded from. So nothing written in
+# this file may match one of its own rules.
 #
 # Each content rule is keyed on the shape of the value, not on the name of the
 # field that holds it, so a Talos release that renames or moves a field does

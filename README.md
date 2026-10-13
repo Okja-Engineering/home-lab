@@ -85,7 +85,7 @@ See [platform/talos/README.md](platform/talos/README.md) for detailed security p
 
 [gitleaks](https://github.com/gitleaks/gitleaks) checks the text changes that get past `.gitignore`. `scripts/secret-scan.sh` runs it with two rule sets:
 
-- `.gitleaks-talos.toml` holds the rules for what `talosctl` and `kubectl` write: base64-encoded PEM blocks, PEM private keys, bootstrap and trustd tokens, a 32-byte base64 secret (such as the cluster secret) as the value of a field, and files named `secrets.yaml`, `controlplane.yaml`, `worker.yaml`, `talosconfig` or `kubeconfig`. These rules have no allowlist: they apply to every path except that rules file itself.
+- `.gitleaks-talos.toml` holds the rules for what `talosctl` and `kubectl` write: base64-encoded PEM blocks, PEM private keys, bootstrap and trustd tokens, a 32-byte base64 secret (such as the cluster secret) as the value of a field, and files named `secrets.yaml`, `controlplane.yaml`, `worker.yaml`, `talosconfig` or `kubeconfig`. These rules have no allowlist: they apply to every path, the rules file included.
 - `.gitleaks.toml` holds gitleaks' default rules. They come with gitleaks' default allowlist, which exempts some paths from them, such as the common lock files and `node_modules/`.
 
 The scan runs in two places:
