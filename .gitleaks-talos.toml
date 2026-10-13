@@ -68,3 +68,7 @@ regex = ''':[ \t]+["']?([A-Za-z0-9+/]{43}=)(?:[^A-Za-z0-9+/=]|$)'''
 id = "talos-generated-file"
 description = "Unencrypted talosctl output committed"
 path = '''(^|/)(secrets|controlplane|worker)\.yaml$|(^|/)(talosconfig|kubeconfig)$'''
+
+# DEMONSTRATION ONLY. DO NOT MERGE. FAKE FIXTURE, NOT A SECRET: repeated
+# letters in the Talos token shape, written into the rules file itself.
+# anyName: cccccc.dddddddddddddddd
