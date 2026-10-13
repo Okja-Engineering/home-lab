@@ -41,7 +41,7 @@ The nodes will not use DHCP reservations. Each node's address will be set in its
 
 ### Router Check Before Talos Installation
 
-The address plan has not been checked against the router yet. Before Talos installation:
+The address plan has been partly checked against the router. [ADR-014](adr/014-rebase-address-plan-onto-10-0-0-0-24.md) records under Impact what was checked, and [issue 16](https://github.com/Okja-Engineering/home-lab/issues/16) tracks what is left. Before Talos installation:
 
 1. Log into router or Omada controller
 2. Confirm the DHCP pool does not include the node addresses or the cluster VIP

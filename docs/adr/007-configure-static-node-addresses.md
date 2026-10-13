@@ -35,4 +35,4 @@ Revisit this decision when VLANs are introduced.
 
 Added 2026-10-13. The accepted text above is unchanged except for the addresses under Decision, which were re-based on this date.
 
-The addresses under Decision were 192.168.1.21 to 192.168.1.23. The router check for [issue 16](https://github.com/Okja-Engineering/home-lab/issues/16) found that the home network is 10.0.0.0/24, not 192.168.1.0/24, so the planned node addresses moved to the same host numbers on that subnet. [ADR-014](014-rebase-address-plan-onto-10-0-0-0-24.md) records the decision. The new addresses are still planned: they are not yet confirmed on the gateway.
+The addresses under Decision were 192.168.1.21 to 192.168.1.23. The router check for [issue 16](https://github.com/Okja-Engineering/home-lab/issues/16) found that the home network is 10.0.0.0/24, not 192.168.1.0/24, so the planned node addresses moved to the same host numbers on that subnet. [ADR-014](014-rebase-address-plan-onto-10-0-0-0-24.md) records the decision, and its Impact section says how far the new addresses have been checked.
