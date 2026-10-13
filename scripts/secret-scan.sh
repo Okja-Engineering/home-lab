@@ -89,7 +89,7 @@ esac
 
 # Two passes over the same changes, one per rule set:
 #   .gitleaks-talos.toml  the Talos rules, which have no allowlist and so
-#                         apply to every path but that file's own
+#                         apply to every path
 #   .gitleaks.toml        gitleaks' default rules, with gitleaks' default
 #                         allowlist of paths
 configs='.gitleaks-talos.toml .gitleaks.toml'
@@ -106,11 +106,16 @@ failed=0
 for config in $configs; do
   echo "secret-scan: ${mode}, rules from ${config}" >&2
 
+  # The config is named with a leading "./" on purpose. gitleaks does not scan
+  # the file whose path is spelled exactly as --config is, and git never
+  # prints a path that starts with "./". Without it the Talos rules would not
+  # apply to .gitleaks-talos.toml.
+  #
   # --redact keeps a detected secret out of the output, which is public in CI.
   # Do not add --log-level debug: it prints decoded values and defeats
   # --redact. --no-color keeps the log lines plain for the checks below.
   status=0
-  gitleaks git --config "$config" "$@" --redact --verbose --no-banner --no-color 2>"$log" || status=$?
+  gitleaks git --config "./${config}" "$@" --redact --verbose --no-banner --no-color 2>"$log" || status=$?
   cat "$log" >&2
 
   if [ "$status" -ne 0 ]; then
