@@ -13,7 +13,7 @@ The plan assumed the home network was 192.168.1.0/24, and that had never been ch
 
 Nothing is installed on any node yet, and the cluster's secrets and machine configs have not been generated, so the move changes only text: this repository and its issues.
 
-This ADR changes the addresses in two accepted ADRs, in place, and nothing else in them: the endpoint under Decision in [ADR-006](006-use-talos-vip-for-kubernetes-api-endpoint.md) (line 8 as of commit `9a7d5a0`), which was `https://192.168.1.20:6443`, and the node addresses under Decision in [ADR-007](007-configure-static-node-addresses.md) (line 8 as of the same commit), which were 192.168.1.21 to 192.168.1.23. Each now ends with a dated note giving the old value. The decisions themselves, a shared VIP and static node addresses, still hold.
+This ADR changes the addresses in two accepted ADRs, in place: the endpoint under Decision in [ADR-006](006-use-talos-vip-for-kubernetes-api-endpoint.md) (line 8 as of commit `9a7d5a0`), which was `https://192.168.1.20:6443`, and the node addresses under Decision in [ADR-007](007-configure-static-node-addresses.md) (line 8 as of the same commit), which were 192.168.1.21 to 192.168.1.23. Nothing else in their accepted text changes, and each now ends with a dated note giving the old value. The decisions themselves, a shared VIP and static node addresses, still hold.
 
 ## Options Considered
 
@@ -36,7 +36,7 @@ The values are now:
 
 The subnet and the gateway address are what the router check found. On 2026-10-13 the gateway's DHCP pool was set to 10.0.0.30 through 10.0.0.239 and the saved values were read back, so the pool now excludes the VIP, node, worker and application ranges. On the same date a ping and ARP check from the workstation found none of the twenty addresses in those ranges in use.
 
-That is not yet the whole check. A device that was asleep would not have shown up, and a device that took a lease in those ranges before the pool changed may still hold it: the lease time is two days, and it is not known whether the gateway renews a lease that is now outside the pool. The gateway's client list has not been compared with the ranges. No address is assigned to anything, so every value except the subnet and the gateway address is still planned. Issue 16 stays open for what is left.
+That is not yet the whole check. A device that was asleep would not have shown up, and a device that took a lease in those ranges before the pool changed may still hold it: the lease time is two days, and it is not known whether the gateway renews a lease that is now outside the pool. The gateway's client list has not been compared with the ranges. No address in those ranges is assigned to anything, so every value except the subnet and the gateway address is still planned. Issue 16 stays open for what is left.
 
 The gateway is not carried over as a DNS server for the nodes. The old plan listed the router first among the DNS servers; this plan does not assume the gateway is one. The DNS servers are marked as to be confirmed in issue 16.
 
@@ -50,7 +50,7 @@ So `ipam.mode: kubernetes`, which [issue 21](https://github.com/Okja-Engineering
 
 ## Not Doing Yet
 
-Checking the gateway's client list against the two ranges, choosing the DNS servers for the nodes, deciding whether to keep the name `k8s.lab.home.arpa`, and giving the workstation a stable address all stay with issue 16.
+Checking the gateway's client list against the planned ranges, choosing the DNS servers for the nodes, deciding whether to keep the name `k8s.lab.home.arpa`, and giving the workstation a stable address all stay with issue 16.
 
 ## Review Notes
 
