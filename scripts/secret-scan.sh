@@ -9,9 +9,10 @@
 # .pre-commit-config.yaml; the workflow installs the release pinned in
 # .github/workflows/secret-scan.yml. Both are v8.30.1.
 #
-# Exit status: 0 when nothing was found and the scan read what it was asked
-# to; 1 when something was found or the scan cannot be trusted; 2 when the
-# script was called wrongly or gitleaks is not on PATH.
+# Exit status: 0 only when gitleaks exited 0, logged no error, and reported
+# reading something where there was something to read (the three checks at
+# the end). 1 when it found something or any of that failed. 2 when the script
+# was called wrongly or gitleaks is not on PATH.
 set -eu
 
 usage() {
@@ -22,17 +23,33 @@ usage() {
 [ "$#" -eq 1 ] || usage
 mode=$1
 
+cd "$(git rev-parse --show-toplevel)"
+
 # What gitleaks reads. In both modes it has git print a diff and scans the
 # lines that diff adds. It therefore never scans a file that git treats as
 # binary, such as an etcd snapshot or an archive (git prints no text for it,
 # and gitleaks does not open archives), a line that was removed, or a commit
 # message.
+#
+# For each mode, `evidence` is what gitleaks must log for the scan to count as
+# having read that diff, and `missing` is what to say when it did not.
 case "$mode" in
   staged)
     # `git diff --staged`: the lines the commit being made adds.
     set -- --pre-commit --staged
-    # No commit exists yet, so gitleaks reports 0 commits.
-    commits='[0-9]+'
+    # No commit exists yet, so gitleaks reports "0 commits scanned." whether
+    # it read the staged diff or not. What shows a read is the number of bytes
+    # it scanned: more than 0 whenever the staged changes add a line of text.
+    # --numstat counts those lines without gitleaks ("-" marks a binary file).
+    added=$(git diff --staged --no-ext-diff --numstat . |
+      awk '$1 ~ /^[0-9]+$/ { n += $1 } END { print n + 0 }')
+    if [ "$added" -gt 0 ]; then
+      evidence='scanned ~[1-9][0-9]* bytes '
+      missing="gitleaks did not report reading any of the staged additions (lines added, by git's count: ${added})"
+    else
+      evidence='[0-9]+ commits scanned\.$'
+      missing='gitleaks did not report finishing the scan'
+    fi
     ;;
   history)
     # gitleaks runs `git log -p -U0` with these options, split on single
@@ -49,7 +66,9 @@ case "$mode" in
     # --diff-merges=first-parent is added because git prints no diff at all
     # for a merge commit without it.
     set -- "--log-opts=--full-history --diff-merges=first-parent --diff-filter=tuxdb HEAD"
-    commits='[1-9][0-9]*'
+    # A history always has something to read: at least one commit.
+    evidence='[1-9][0-9]* commits scanned\.$'
+    missing='gitleaks did not report scanning any commit'
     ;;
   *)
     usage
@@ -62,8 +81,6 @@ esac
 #   .gitleaks.toml        gitleaks' default rules, with gitleaks' default
 #                         allowlist of paths
 configs='.gitleaks-talos.toml .gitleaks.toml'
-
-cd "$(git rev-parse --show-toplevel)"
 
 if ! command -v gitleaks >/dev/null; then
   echo "secret-scan: gitleaks is not on PATH" >&2
@@ -93,14 +110,16 @@ for config in $configs; do
   # v8.30.1 starts git itself, and when that git command fails, or only prints
   # a warning, gitleaks logs the message at error level, stops reading at
   # whatever point it has reached, reports "no leaks found" and exits 0
-  # (https://github.com/gitleaks/gitleaks/issues/2129). So the scan passes
-  # only if gitleaks logged no error and reported the scan it finished.
+  # (https://github.com/gitleaks/gitleaks/issues/2129). It also exits 0 when
+  # git printed a diff in which its parser found no file. So the scan passes
+  # only if gitleaks logged no error and logged the evidence of a read that
+  # the mode requires.
   if grep -E -q '^[^ ]+ ERR( |$)' "$log"; then
     echo "secret-scan: FAILED: gitleaks logged an error (ERR above), so it did not read all the changes" >&2
     failed=1
   fi
-  if ! grep -E -q "^[^ ]+ INF ${commits} commits scanned\.\$" "$log"; then
-    echo "secret-scan: FAILED: gitleaks did not report the commits it scanned (history must have at least one)" >&2
+  if ! grep -E -q "^[^ ]+ INF ${evidence}" "$log"; then
+    echo "secret-scan: FAILED: ${missing}" >&2
     failed=1
   fi
 done
