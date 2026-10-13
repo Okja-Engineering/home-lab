@@ -34,7 +34,9 @@ The values are now:
 | Future worker nodes | 192.168.1.24 to 192.168.1.29 | 10.0.0.24 to 10.0.0.29 |
 | Application address pool ([ADR-012](012-use-cilium-gateway-api-for-ingress.md)) | 192.168.1.240 to 192.168.1.249 | 10.0.0.240 to 10.0.0.249 |
 
-The subnet and the gateway address are what the router check found. Every other value is planned and not yet confirmed on the gateway: its DHCP pool has not been read, so none of these addresses is known to be outside the pool or unused. Confirming them is the work of issue 16. If the pool cannot be made to exclude the VIP, node, worker and application ranges, the numbers change again.
+The subnet and the gateway address are what the router check found. On 2026-10-13 the gateway's DHCP pool was set to 10.0.0.30 through 10.0.0.239 and the saved values were read back, so the pool now excludes the VIP, node, worker and application ranges. On the same date a ping and ARP check from the workstation found none of the twenty addresses in those ranges in use.
+
+That is not yet the whole check. A device that was asleep would not have shown up, and a device that took a lease in those ranges before the pool changed can hold it for up to two days. The gateway's client list has not been compared with the ranges. No address is assigned to anything, so every value except the subnet and the gateway address is still planned. Issue 16 stays open for what is left.
 
 The gateway is not carried over as a DNS server for the nodes. The old plan listed the router first among the DNS servers, but the gateway's DHCP hands out public resolvers, not its own address. The DNS servers are marked as to be confirmed in issue 16.
 
@@ -48,8 +50,8 @@ So `ipam.mode: kubernetes`, which [issue 21](https://github.com/Okja-Engineering
 
 ## Not Doing Yet
 
-Confirming the addresses on the gateway, choosing the DNS servers for the nodes, deciding whether to keep the name `k8s.lab.home.arpa`, and giving the workstation a stable address all stay with issue 16.
+Checking the gateway's client list against the two ranges, choosing the DNS servers for the nodes, deciding whether to keep the name `k8s.lab.home.arpa`, and giving the workstation a stable address all stay with issue 16.
 
 ## Review Notes
 
-Revisit this decision if the gateway's DHCP pool cannot be made to exclude the planned ranges, or if the nodes turn out to be on a different network.
+Revisit this decision if the gateway's DHCP pool stops excluding the planned ranges, for example after the gateway is reset or replaced, if a device is found on one of the planned addresses, or if the nodes turn out to be on a different network.
