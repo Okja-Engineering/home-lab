@@ -122,7 +122,7 @@ for config in $configs; do
   cat "$log" >&2
 
   if [ "$status" -ne 0 ]; then
-    echo "secret-scan: FAILED: gitleaks exited with status ${status} (1 means it found something)" >&2
+    echo "secret-scan: FAILED: gitleaks exited with status ${status}: it found something, or it could not finish" >&2
     failed=1
   fi
 
@@ -135,7 +135,7 @@ for config in $configs; do
   # only if gitleaks logged no error and logged the evidence of a read that
   # the mode requires.
   if grep -E -q '^[^ ]+ ERR( |$)' "$log"; then
-    echo "secret-scan: FAILED: gitleaks logged an error (ERR above), so it did not read all the changes" >&2
+    echo "secret-scan: FAILED: gitleaks logged an error (ERR above), so it may not have read all the changes" >&2
     failed=1
   fi
   if ! grep -E -q "^[^ ]+ INF ${evidence}" "$log"; then
