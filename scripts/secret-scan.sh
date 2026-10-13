@@ -11,7 +11,7 @@
 #
 # Exit status: 0 when nothing was found and the scan read what it was asked
 # to; 1 when something was found or the scan cannot be trusted; 2 when the
-# script was called wrongly.
+# script was called wrongly or gitleaks is not on PATH.
 set -eu
 
 usage() {
@@ -58,7 +58,7 @@ esac
 
 # Two passes over the same changes, one per rule set:
 #   .gitleaks-talos.toml  the Talos rules, which have no allowlist and so
-#                         apply to every path
+#                         apply to every path but that file's own
 #   .gitleaks.toml        gitleaks' default rules, with gitleaks' default
 #                         allowlist of paths
 configs='.gitleaks-talos.toml .gitleaks.toml'
