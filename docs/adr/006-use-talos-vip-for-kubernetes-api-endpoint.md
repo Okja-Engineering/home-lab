@@ -5,7 +5,7 @@ Date: 2026-10-11
 
 ## Decision
 
-The cluster endpoint is `https://192.168.1.20:6443`. That address is a Talos Layer 2 shared VIP held by one healthy control-plane node. `talosctl` endpoints are the individual node IPs, never the VIP.
+The cluster endpoint is `https://10.0.0.20:6443`. That address is a Talos Layer 2 shared VIP held by one healthy control-plane node. `talosctl` endpoints are the individual node IPs, never the VIP.
 
 ## Context
 
@@ -29,3 +29,9 @@ An external load balancer is deferred.
 ## Review Notes
 
 Revisit this decision if failover time becomes a problem.
+
+## Clarifying Note
+
+Added 2026-10-13. The accepted text above is unchanged except for the address under Decision, which was re-based on this date.
+
+The endpoint under Decision was `https://192.168.1.20:6443`. The router check for [issue 16](https://github.com/Okja-Engineering/home-lab/issues/16) found that the home network is 10.0.0.0/24, not 192.168.1.0/24, so the planned VIP moved to the same host number on that subnet. [ADR-014](014-rebase-address-plan-onto-10-0-0-0-24.md) records the decision. The new address is still planned: it is not yet confirmed on the gateway.
