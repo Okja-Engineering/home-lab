@@ -38,11 +38,11 @@ The subnet and the gateway address are what the router check found. Every other 
 
 The gateway is not carried over as a DNS server for the nodes. The old plan listed the router first among the DNS servers, but the gateway's DHCP hands out public resolvers, not its own address. The DNS servers are marked as to be confirmed in issue 16.
 
-The nodes now sit inside 10.0.0.0/8, which they did not under the old plan. That matters for pod addresses. Checked on 2026-10-13 against the current stable releases, Cilium 1.20.2 and Talos v1.14.2:
+The planned node addresses are now inside 10.0.0.0/8, which the old ones were not. That matters for pod addresses. Checked on 2026-10-13 against the current stable releases, Cilium 1.20.2 and Talos v1.14.2:
 
 - Cilium's default IPAM mode is `cluster-pool`, and its default pod address pool is 10.0.0.0/8. The node network is inside that block. Cilium's documentation says that nodes then lose connectivity to each other.
-- Talos' default pod subnet is 10.244.0.0/16 and its default service subnet is 10.96.0.0/12. Neither overlaps 10.0.0.0/24.
-- With `ipam.mode: kubernetes`, Cilium allocates pod addresses from the range Kubernetes assigns to each node, and on Talos Kubernetes takes those ranges from the pod subnet. Talos' guide for deploying Cilium requires this mode.
+- Talos's default pod subnet is 10.244.0.0/16 and its default service subnet is 10.96.0.0/12. Neither overlaps 10.0.0.0/24.
+- With `ipam.mode: kubernetes`, Cilium allocates pod addresses from the range Kubernetes assigns to each node, and on Talos Kubernetes takes those ranges from the pod subnet. Talos's guide for deploying Cilium requires this mode.
 
 So `ipam.mode: kubernetes`, which [issue 21](https://github.com/Okja-Engineering/home-lab/issues/21) plans, is now required for a second reason: with Cilium's default mode, pods would be given addresses from the block the nodes are in. The Talos pod and service subnets must also stay clear of 10.0.0.0/24, as the defaults do. Both are to be checked again when the versions are pinned ([issue 17](https://github.com/Okja-Engineering/home-lab/issues/17)).
 
