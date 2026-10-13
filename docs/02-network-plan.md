@@ -11,9 +11,9 @@ See [Physical Topology](../diagrams/physical-topology.md) for a visual represent
 ### Basic Network
 
 - **Network Type:** Flat network (no VLANs initially)
-- **Subnet:** 192.168.1.0/24
-- **Gateway:** 192.168.1.1
-- **DNS:** 192.168.1.1, 1.1.1.1
+- **Subnet:** 10.0.0.0/24
+- **Gateway:** 10.0.0.1
+- **DNS:** To be confirmed in [issue 16](https://github.com/Okja-Engineering/home-lab/issues/16), step 4. The gateway is not assumed to be a DNS server for the nodes
 - **Domain:** lab.home.arpa (provisional)
 
 ### Control Plane IP Addresses (Planned)
@@ -22,9 +22,9 @@ Control plane IP addresses are planned static addresses ([ADR-007](adr/007-confi
 
 | Node | Planned IP | Status |
 |---|---|---|
-| cp-01 | 192.168.1.21 | Planned / Unconfirmed |
-| cp-02 | 192.168.1.22 | Planned / Unconfirmed |
-| cp-03 | 192.168.1.23 | Planned / Unconfirmed |
+| cp-01 | 10.0.0.21 | Planned / Unconfirmed |
+| cp-02 | 10.0.0.22 | Planned / Unconfirmed |
+| cp-03 | 10.0.0.23 | Planned / Unconfirmed |
 
 **Action Required:** Complete the router check under [Node Addressing](#node-addressing) before Talos installation.
 
@@ -53,8 +53,8 @@ Do not record MAC addresses in this repository. ADR-007 selects network ports wi
 
 ### Router
 
-- **Role:** Default gateway, DHCP server, DNS forwarder
-- **IP:** 192.168.1.1
+- **Role:** Default gateway, DHCP server (an ISP-supplied gateway). Not confirmed as a DNS forwarder: see [issue 16](https://github.com/Okja-Engineering/home-lab/issues/16), step 4
+- **IP:** 10.0.0.1
 - **Management:** Web UI or SSH
 
 ### Switch (Purchased, Configuration Deferred)
@@ -70,7 +70,7 @@ Do not record MAC addresses in this repository. ADR-007 selects network ports wi
 ### Workstation
 
 - **Role:** Management workstation for cluster operations
-- **Network:** Connected to same 192.168.1.0/24 subnet
+- **Network:** Connected to same 10.0.0.0/24 subnet
 - **Access:** talosctl to the nodes, not SSH ([ADR-001](adr/001-use-talos-linux.md)); kubectl access via kubeconfig
 
 ## Network Topology
@@ -80,7 +80,7 @@ Do not record MAC addresses in this repository. ADR-007 selects network ports wi
 ```
 Internet
     |
-Router (192.168.1.1)
+Router (10.0.0.1)
     |
 Switch (Omada, purchased, configuration deferred)
     |
@@ -131,8 +131,8 @@ VLANs will be implemented after the control plane is stable. Potential VLANs:
 
 ### API Access
 
-- **Talos API:** Restricted to 192.168.1.0/24 initially
-- **Kubernetes API:** Restricted to 192.168.1.0/24 initially
+- **Talos API:** Restricted to 10.0.0.0/24 initially
+- **Kubernetes API:** Restricted to 10.0.0.0/24 initially
 - **Future:** Consider VPN or bastion for remote access
 
 ### Firewall Rules

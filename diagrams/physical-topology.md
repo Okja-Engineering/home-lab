@@ -12,12 +12,12 @@
 ```mermaid
 graph TB
     Internet[Internet]
-    Router[Router<br/>192.168.1.1<br/>Gateway/DHCP/DNS]
+    Router[Router<br/>10.0.0.1<br/>Gateway/DHCP]
     Workstation[Workstation<br/>macOS<br/>talosctl/kubectl]
     Switch[TP-Link Omada Switch<br/>Purchased<br/>Config Deferred<br/>Unmanaged/flat use initially]
-    cp01[cp-01<br/>192.168.1.21<br/>GMKtec mini PC<br/>Control-plane target]
-    cp02[cp-02<br/>192.168.1.22<br/>GMKtec mini PC<br/>Control-plane target]
-    cp03[cp-03<br/>192.168.1.23<br/>GMKtec mini PC<br/>Control-plane target]
+    cp01[cp-01<br/>10.0.0.21<br/>GMKtec mini PC<br/>Control-plane target]
+    cp02[cp-02<br/>10.0.0.22<br/>GMKtec mini PC<br/>Control-plane target]
+    cp03[cp-03<br/>10.0.0.23<br/>GMKtec mini PC<br/>Control-plane target]
     FutureWorkers[Future Workers<br/>Stateful/Platform/GPU<br/>Deferred]
     FutureNAS[Future NAS<br/>Storage<br/>Deferred]
 
@@ -41,7 +41,7 @@ graph TB
     class FutureWorkers,FutureNAS future
 ```
 
-**Network:** Flat 192.168.1.0/24 (no VLANs - VLANs are not active)
+**Network:** Flat 10.0.0.0/24 (no VLANs - VLANs are not active)
 
 ## Components
 
@@ -49,13 +49,13 @@ graph TB
 
 - **Role:** Management workstation
 - **OS:** macOS
-- **Network:** 192.168.1.0/24 (DHCP)
+- **Network:** 10.0.0.0/24 (DHCP)
 - **Tools:** talosctl, kubectl, git
 
 ### Router
 
-- **Role:** Default gateway, DHCP server, DNS forwarder
-- **IP:** 192.168.1.1
+- **Role:** Default gateway, DHCP server (an ISP-supplied gateway). Not confirmed as a DNS forwarder: see [issue 16](https://github.com/Okja-Engineering/home-lab/issues/16), step 4
+- **IP:** 10.0.0.1
 - **Management:** Web UI or SSH
 
 ### Switch (Purchased, Configuration Deferred)
@@ -70,9 +70,9 @@ graph TB
 
 ### Control Plane Nodes
 
-- **cp-01:** GMKtec mini PC, 192.168.1.21
-- **cp-02:** GMKtec mini PC, 192.168.1.22
-- **cp-03:** GMKtec mini PC, 192.168.1.23
+- **cp-01:** GMKtec mini PC, 10.0.0.21
+- **cp-02:** GMKtec mini PC, 10.0.0.22
+- **cp-03:** GMKtec mini PC, 10.0.0.23
 
 ### Future Components
 

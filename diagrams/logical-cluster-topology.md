@@ -13,10 +13,10 @@ The phases are defined in [Goals](../docs/00-goals.md#phases).
 ```mermaid
 graph TB
     Workstation[Workstation<br/>talosctl/kubectl]
-    VIP[Kubernetes API endpoint<br/>Talos shared VIP<br/>192.168.1.20:6443<br/>Held by one node at a time]
-    cp01[cp-01<br/>192.168.1.21<br/>Talos + kubelet + etcd<br/>Target]
-    cp02[cp-02<br/>192.168.1.22<br/>Talos + kubelet + etcd<br/>Target]
-    cp03[cp-03<br/>192.168.1.23<br/>Talos + kubelet + etcd<br/>Target]
+    VIP[Kubernetes API endpoint<br/>Talos shared VIP<br/>10.0.0.20:6443<br/>Held by one node at a time]
+    cp01[cp-01<br/>10.0.0.21<br/>Talos + kubelet + etcd<br/>Target]
+    cp02[cp-02<br/>10.0.0.22<br/>Talos + kubelet + etcd<br/>Target]
+    cp03[cp-03<br/>10.0.0.23<br/>Talos + kubelet + etcd<br/>Target]
     etcd[etcd Cluster<br/>Target: 3 members]
     k8s[Kubernetes<br/>Control Plane<br/>Target]
     apiserver[kube-apiserver]

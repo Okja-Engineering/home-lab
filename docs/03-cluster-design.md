@@ -17,9 +17,9 @@ The control plane consists of 3 Talos Linux nodes:
 
 | Node | Role | Planned IP | Hardware |
 |---|---|---|---|
-| cp-01 | Control plane | 192.168.1.21 | GMKtec mini PC |
-| cp-02 | Control plane | 192.168.1.22 | GMKtec mini PC |
-| cp-03 | Control plane | 192.168.1.23 | GMKtec mini PC |
+| cp-01 | Control plane | 10.0.0.21 | GMKtec mini PC |
+| cp-02 | Control plane | 10.0.0.22 | GMKtec mini PC |
+| cp-03 | Control plane | 10.0.0.23 | GMKtec mini PC |
 
 ### Control Plane Characteristics
 
@@ -134,10 +134,10 @@ Worker nodes will be added after:
 
 ### Current Network
 
-- Flat network (192.168.1.0/24)
+- Flat network (10.0.0.0/24)
 - No VLANs initially
 - Static node addresses, to be set in the Talos machine config ([ADR-007](adr/007-configure-static-node-addresses.md))
-- DNS via router and public DNS
+- DNS servers for the nodes to be confirmed in [issue 16](https://github.com/Okja-Engineering/home-lab/issues/16), step 4
 
 ### Future Network
 
