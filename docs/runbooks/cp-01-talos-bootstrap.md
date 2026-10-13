@@ -108,7 +108,7 @@ Identify the primary network interface and confirm DHCP assignment:
 
 ```bash
 # Set cp-01 IP (use the DHCP-assigned address shown in Talos console)
-export CP_01_IP=192.168.1.21
+export CP_01_IP=10.0.0.21
 
 # Confirm interface names
 talosctl get --insecure --nodes $CP_01_IP links
@@ -158,24 +158,24 @@ Update the hardware inventory with discovered values:
 Access your router or Omada controller and create a static DHCP reservation:
 
 - **MAC address:** (from Step 7)
-- **IP address:** 192.168.1.21
+- **IP address:** 10.0.0.21
 - **Hostname:** cp-01
 
-**Verification:** Reboot cp-01 and confirm it receives 192.168.1.21.
+**Verification:** Reboot cp-01 and confirm it receives 10.0.0.21.
 
 ```bash
 # After reboot, confirm IP address
-talosctl get --insecure --nodes 192.168.1.21 links
+talosctl get --insecure --nodes 10.0.0.21 links
 ```
 
-**Do not proceed until:** DHCP reservation is working and cp-01 has 192.168.1.21.
+**Do not proceed until:** DHCP reservation is working and cp-01 has 10.0.0.21.
 
 ### Step 9: Create DNS Record
 
 Create an A record in your home DNS:
 
 - **Name:** k8s.lab.home.arpa
-- **IP:** 192.168.1.21
+- **IP:** 10.0.0.21
 
 **Verification:** From your workstation, test DNS resolution:
 
@@ -186,7 +186,7 @@ nslookup k8s.lab.home.arpa
 dig k8s.lab.home.arpa
 ```
 
-**Do not proceed until:** DNS record is created and resolving to 192.168.1.21.
+**Do not proceed until:** DNS record is created and resolving to 10.0.0.21.
 
 ### Step 10: Verify Network Connectivity
 
@@ -194,10 +194,10 @@ Confirm your workstation can reach cp-01:
 
 ```bash
 # Ping test
-ping -c 3 192.168.1.21
+ping -c 3 10.0.0.21
 
 # Talos API test
-talosctl get --insecure --nodes 192.168.1.21 links
+talosctl get --insecure --nodes 10.0.0.21 links
 ```
 
 **Do not proceed until:** Network connectivity is confirmed from workstation to cp-01.
@@ -273,7 +273,7 @@ Apply the control plane machine config to cp-01:
 ```bash
 # Apply config to cp-01
 talosctl apply-config --insecure \
-  --nodes 192.168.1.21 \
+  --nodes 10.0.0.21 \
   --file generated/controlplane-1.yaml
 ```
 
@@ -285,7 +285,7 @@ After reboot, verify cp-01 is in maintenance mode:
 
 ```bash
 # Check node status
-talosctl get --insecure --nodes 192.168.1.21 members
+talosctl get --insecure --nodes 10.0.0.21 members
 
 # Expected: cp-01 should show as "MEMBERSHIP_JOINED" or similar
 ```
@@ -306,7 +306,7 @@ Bootstrap the Kubernetes cluster (run once on cp-01):
 
 ```bash
 # Bootstrap cluster
-talosctl bootstrap --nodes 192.168.1.21
+talosctl bootstrap --nodes 10.0.0.21
 ```
 
 **Expected output:** Talos will initialize etcd and start Kubernetes control plane components.
@@ -317,7 +317,7 @@ Retrieve the Kubernetes admin kubeconfig:
 
 ```bash
 # Get kubeconfig
-talosctl kubeconfig --nodes 192.168.1.21 > kubeconfig
+talosctl kubeconfig --nodes 10.0.0.21 > kubeconfig
 
 # IMPORTANT: Store kubeconfig securely, not in Git
 # This file grants admin access to the cluster

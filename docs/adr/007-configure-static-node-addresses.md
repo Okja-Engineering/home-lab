@@ -5,7 +5,7 @@ Date: 2026-10-11
 
 ## Decision
 
-cp-01 to cp-03 get static addresses (192.168.1.21 to 192.168.1.23) in their per-node Talos patches, outside the router's DHCP range.
+cp-01 to cp-03 get static addresses (10.0.0.21 to 10.0.0.23) in their per-node Talos patches, outside the router's DHCP range.
 
 ## Context
 
@@ -30,3 +30,9 @@ VLANs are deferred (see [ADR-002](002-start-with-flat-network.md)).
 ## Review Notes
 
 Revisit this decision when VLANs are introduced.
+
+## Clarifying Note
+
+Added 2026-10-13. The accepted text above is unchanged except for the addresses under Decision, which were re-based on this date.
+
+The addresses under Decision were 192.168.1.21 to 192.168.1.23. The router check for [issue 16](https://github.com/Okja-Engineering/home-lab/issues/16) found that the home network is 10.0.0.0/24, not 192.168.1.0/24, so the planned node addresses moved to the same host numbers on that subnet. [ADR-014](014-rebase-address-plan-onto-10-0-0-0-24.md) records the decision, and its Impact section says how far the new addresses have been checked.

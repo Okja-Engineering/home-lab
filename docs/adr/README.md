@@ -44,6 +44,7 @@ This home lab is both an operational platform and a learning portfolio. ADRs hel
 | 011 | Bootstrap Once on cp-01, Then Join cp-02 and cp-03 | Accepted | Run `talosctl bootstrap` once on cp-01, then join cp-02 and cp-03 |
 | 012 | Use Cilium Gateway API for Ingress (Phase 3) | Accepted | Use Cilium's Gateway API for Phase 3 ingress |
 | 013 | Define Management Access Boundaries Now; Enforce with the Talos Firewall Later | Accepted | Define allowed management sources now and enforce them with the Talos firewall later |
+| 014 | Re-base the Address Plan onto 10.0.0.0/24 | Accepted | Move the planned addresses onto 10.0.0.0/24, the home network's subnet, keeping the host numbers and the design |
 
 ## Instructions
 

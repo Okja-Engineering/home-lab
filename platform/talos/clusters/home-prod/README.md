@@ -11,9 +11,9 @@ Talos Linux cluster configuration for home production environment.
 
 ## Node IPs
 
-- cp-01: 192.168.1.21
-- cp-02: 192.168.1.22
-- cp-03: 192.168.1.23
+- cp-01: 10.0.0.21
+- cp-02: 10.0.0.22
+- cp-03: 10.0.0.23
 
 ## Configuration
 
@@ -43,8 +43,8 @@ The bootstrap process transforms bare GMKtec mini PCs into a Talos Kubernetes co
 
 ### Step 2: Network Preparation
 
-- Create DHCP reservations for cp-01 (192.168.1.21), cp-02 (192.168.1.22), cp-03 (192.168.1.23)
-- Create DNS A record: k8s.lab.home.arpa → 192.168.1.21
+- Create DHCP reservations for cp-01 (10.0.0.21), cp-02 (10.0.0.22), cp-03 (10.0.0.23)
+- Create DNS A record: k8s.lab.home.arpa → 10.0.0.21
 - Verify network connectivity from workstation to nodes
 
 ### Step 3: Configuration Generation

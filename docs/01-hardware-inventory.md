@@ -6,17 +6,17 @@ The control plane consists of 3 GMKtec mini PCs. Exact specifications will be fi
 
 | Node | Role | Hardware | CPU | RAM | Storage | Planned IP | Status |
 |---|---|---|---|---|---|---|---|
-| cp-01 | Control plane | GMKtec mini PC | TBD | TBD | TBD | 192.168.1.21 | Planned |
-| cp-02 | Control plane | GMKtec mini PC | TBD | TBD | TBD | 192.168.1.22 | Planned |
-| cp-03 | Control plane | GMKtec mini PC | TBD | TBD | TBD | 192.168.1.23 | Planned |
+| cp-01 | Control plane | GMKtec mini PC | TBD | TBD | TBD | 10.0.0.21 | Planned |
+| cp-02 | Control plane | GMKtec mini PC | TBD | TBD | TBD | 10.0.0.22 | Planned |
+| cp-03 | Control plane | GMKtec mini PC | TBD | TBD | TBD | 10.0.0.23 | Planned |
 
 ## Planned IP Addresses
 
 Control plane IP addresses are planned static addresses ([ADR-007](adr/007-configure-static-node-addresses.md)). They are not yet confirmed on the router:
 
-- **cp-01:** 192.168.1.21
-- **cp-02:** 192.168.1.22
-- **cp-03:** 192.168.1.23
+- **cp-01:** 10.0.0.21
+- **cp-02:** 10.0.0.22
+- **cp-03:** 10.0.0.23
 
 Each address will be set in the node's Talos machine config, not reserved in DHCP. The router check to do before Talos installation is in the [Network Plan](02-network-plan.md#node-addressing).
 
@@ -40,7 +40,7 @@ The management workstation used for cluster operations:
 
 ## Network Equipment
 
-- **Router:** Home router (192.168.1.1)
+- **Router:** Home router (10.0.0.1)
 - **Switch:** TP-Link Omada 10-port Gigabit Smart PoE+ (purchased, configuration deferred)
   - **Source:** Micro Center (~$114)
   - **Model:** Exact model TBD until verified
