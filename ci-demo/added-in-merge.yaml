@@ -1,0 +1,5 @@
+# FAKE FIXTURE. NOT A SECRET. DO NOT MERGE.
+# This file exists in neither parent of the merge commit that adds it. The
+# value is base64 of the 15 characters "-----BEGIN FAKE", the fixture that
+# issue 18 names. It is not key material.
+key: LS0tLS1CRUdJTiBGQUtF
