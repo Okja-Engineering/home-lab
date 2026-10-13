@@ -1,0 +1,8 @@
+# FAKE FIXTURE. NOT A SECRET. DO NOT MERGE.
+# Repeated letters in the shapes talosctl writes its tokens and 32-byte
+# secrets. None of this is key material and none of it came from talosctl.
+# The file name and the field names are made up, to show that the rules do
+# not depend on either.
+fake:
+  anyName: aaaaaa.bbbbbbbbbbbbbbbb
+  otherName: AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=
