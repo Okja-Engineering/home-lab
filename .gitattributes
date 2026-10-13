@@ -1,0 +1,3 @@
+# DEMONSTRATION ONLY. DO NOT MERGE. git ignores a negative pattern in this
+# file and prints a warning each time it reads the file.
+!*.txt

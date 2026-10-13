@@ -48,7 +48,7 @@ case "$mode" in
     # checkout fetched and fail this scan for a finding on an unrelated one.
     # --diff-merges=first-parent is added because git prints no diff at all
     # for a merge commit without it.
-    set -- "--log-opts=--full-history --diff-merges=first-parent --diff-filter=tuxdb NO-SUCH-REF"
+    set -- "--log-opts=--full-history --diff-merges=first-parent --diff-filter=tuxdb HEAD"
     commits='[1-9][0-9]*'
     ;;
   *)
