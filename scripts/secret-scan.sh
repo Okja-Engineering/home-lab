@@ -25,6 +25,20 @@ mode=$1
 
 cd "$(git rev-parse --show-toplevel)"
 
+# gitleaks' parser needs the diff as git prints it without colour: with a
+# colour escape at the start of each line it finds no file in the diff at all.
+# git colours a diff that it writes to a pipe when the committer's settings
+# say "always" (color.diff, or color.ui where color.diff is not set), and when
+# they say "auto", the default, and the commit runs under a pager on a
+# terminal that supports colour. So switch diff colour off for the git that
+# gitleaks starts. A setting passed in the environment overrides the
+# committer's config files (Git 2.31 or later, which
+# --diff-merges=first-parent needs too). It is added after any setting the
+# caller passed the same way.
+n=${GIT_CONFIG_COUNT:-0}
+export "GIT_CONFIG_KEY_${n}=color.diff" "GIT_CONFIG_VALUE_${n}=false"
+export GIT_CONFIG_COUNT=$((n + 1))
+
 # What gitleaks reads. In both modes it has git print a diff and scans the
 # lines that diff adds. It therefore never scans a file that git treats as
 # binary, such as an etcd snapshot or an archive (git prints no text for it,
