@@ -38,10 +38,10 @@ Before proceeding with this runbook, ensure the following are complete:
 - **cp-01 discovery completed:** Hardware, network interface, disk path confirmed via cp-01 runbook
 - **cp-01 hardware/network/disk/interface values confirmed:** Documented in metadata.env
 - **DHCP reservations exist for all three nodes:**
-  - cp-01: 192.168.1.21
-  - cp-02: 192.168.1.22
-  - cp-03: 192.168.1.23
-- **DNS record exists:** k8s.lab.home.arpa → 192.168.1.21
+  - cp-01: 10.0.0.21
+  - cp-02: 10.0.0.22
+  - cp-03: 10.0.0.23
+- **DNS record exists:** k8s.lab.home.arpa → 10.0.0.21
 - **Talos/Kubernetes version compatibility verified:** See metadata.env for version pins
 - **Secrets storage location selected:** Outside Git, secure location for secrets/secrets.yaml
 - **Generated configs are ignored:** .gitignore protects generated/ directory
@@ -80,7 +80,7 @@ For each node (cp-02, cp-03):
 1. **Confirm Network Interface**
    ```bash
    # Set node IP
-   export CP_02_IP=192.168.1.22  # or CP_03_IP=192.168.1.23
+   export CP_02_IP=10.0.0.22  # or CP_03_IP=10.0.0.23
    
    # Confirm interface names
    talosctl get --insecure --nodes $CP_02_IP links
@@ -98,7 +98,7 @@ For each node (cp-02, cp-03):
 
 3. **Verify DHCP Reservation**
    - Reboot node
-   - Confirm it receives the reserved IP (192.168.1.22 or 192.168.1.23)
+   - Confirm it receives the reserved IP (10.0.0.22 or 10.0.0.23)
    - Test connectivity from workstation
 
 4. **Document MAC Addresses**
@@ -168,7 +168,7 @@ Apply machine configs to all three control plane nodes in sequence.
 ```bash
 # Apply config to cp-01
 talosctl apply-config --insecure \
-  --nodes 192.168.1.21 \
+  --nodes 10.0.0.21 \
   --file generated/controlplane-1.yaml
 ```
 
@@ -178,7 +178,7 @@ talosctl apply-config --insecure \
 
 ```bash
 # Verify cp-01 is in maintenance mode
-talosctl get --insecure --nodes 192.168.1.21 members
+talosctl get --insecure --nodes 10.0.0.21 members
 ```
 
 **Do not proceed until:** cp-01 is in maintenance mode and responding.
@@ -188,7 +188,7 @@ talosctl get --insecure --nodes 192.168.1.21 members
 ```bash
 # Apply config to cp-02
 talosctl apply-config --insecure \
-  --nodes 192.168.1.22 \
+  --nodes 10.0.0.22 \
   --file generated/controlplane-2.yaml
 ```
 
@@ -198,7 +198,7 @@ talosctl apply-config --insecure \
 
 ```bash
 # Verify cp-02 is in maintenance mode
-talosctl get --insecure --nodes 192.168.1.22 members
+talosctl get --insecure --nodes 10.0.0.22 members
 ```
 
 **Do not proceed until:** cp-02 is in maintenance mode and responding.
@@ -208,7 +208,7 @@ talosctl get --insecure --nodes 192.168.1.22 members
 ```bash
 # Apply config to cp-03
 talosctl apply-config --insecure \
-  --nodes 192.168.1.23 \
+  --nodes 10.0.0.23 \
   --file generated/controlplane-3.yaml
 ```
 
@@ -218,7 +218,7 @@ talosctl apply-config --insecure \
 
 ```bash
 # Verify cp-03 is in maintenance mode
-talosctl get --insecure --nodes 192.168.1.23 members
+talosctl get --insecure --nodes 10.0.0.23 members
 ```
 
 **Do not proceed until:** cp-03 is in maintenance mode and responding.
@@ -227,7 +227,7 @@ talosctl get --insecure --nodes 192.168.1.23 members
 
 ```bash
 # Check all three nodes
-talosctl get --insecure --nodes 192.168.1.21,192.168.1.22,192.168.1.23 members
+talosctl get --insecure --nodes 10.0.0.21,10.0.0.22,10.0.0.23 members
 ```
 
 **Expected:** All three nodes show as joined/maintenance mode.
@@ -246,7 +246,7 @@ Bootstrap the Kubernetes cluster on cp-01:
 
 ```bash
 # Bootstrap cluster (run once)
-talosctl bootstrap --nodes 192.168.1.21
+talosctl bootstrap --nodes 10.0.0.21
 ```
 
 **Expected:** Talos will initialize etcd and start Kubernetes control plane components.
@@ -266,7 +266,7 @@ Retrieve the Kubernetes admin kubeconfig:
 
 ```bash
 # Get kubeconfig
-talosctl kubeconfig --nodes 192.168.1.21 > kubeconfig
+talosctl kubeconfig --nodes 10.0.0.21 > kubeconfig
 
 # IMPORTANT: Store kubeconfig securely, not in Git
 # This file grants admin access to the cluster
@@ -284,22 +284,22 @@ Validate the health of the three-node control plane.
 
 ```bash
 # Check Talos cluster health
-talosctl health --nodes 192.168.1.21,192.168.1.22,192.168.1.23
+talosctl health --nodes 10.0.0.21,10.0.0.22,10.0.0.23
 
 # Check cluster members
-talosctl get members --nodes 192.168.1.21
+talosctl get members --nodes 10.0.0.21
 
 # Check etcd service
-talosctl service etcd --nodes 192.168.1.21
+talosctl service etcd --nodes 10.0.0.21
 
 # Check kubelet service
-talosctl service kubelet --nodes 192.168.1.21
+talosctl service kubelet --nodes 10.0.0.21
 
 # Check kube-apiserver service
-talosctl service kube-apiserver --nodes 192.168.1.21
+talosctl service kube-apiserver --nodes 10.0.0.21
 
 # Check etcd health
-talosctl etcd health --nodes 192.168.1.21
+talosctl etcd health --nodes 10.0.0.21
 ```
 
 ### Kubernetes Health Checks
@@ -335,9 +335,9 @@ After successful three-node bootstrap, the cluster should be in the following st
 
 ### Node State
 
-- **cp-01 (192.168.1.21):** Ready, control plane
-- **cp-02 (192.168.1.22):** Ready, control plane
-- **cp-03 (192.168.1.23):** Ready, control plane
+- **cp-01 (10.0.0.21):** Ready, control plane
+- **cp-02 (10.0.0.22):** Ready, control plane
+- **cp-03 (10.0.0.23):** Ready, control plane
 
 ### etcd State
 
