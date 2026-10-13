@@ -38,7 +38,7 @@ The subnet and the gateway address are what the router check found. On 2026-10-1
 
 That is not yet the whole check. A device that was asleep would not have shown up, and a device that took a lease in those ranges before the pool changed may still hold it: the lease time is two days, and it is not known whether the gateway renews a lease that is now outside the pool. The gateway's client list has not been compared with the ranges. No address is assigned to anything, so every value except the subnet and the gateway address is still planned. Issue 16 stays open for what is left.
 
-The gateway is not carried over as a DNS server for the nodes. The old plan listed the router first among the DNS servers, but the gateway's DHCP hands out public resolvers, not its own address. The DNS servers are marked as to be confirmed in issue 16.
+The gateway is not carried over as a DNS server for the nodes. The old plan listed the router first among the DNS servers; this plan does not assume the gateway is one. The DNS servers are marked as to be confirmed in issue 16.
 
 The planned node addresses are now inside 10.0.0.0/8, which the old ones were not. That matters for pod addresses. Checked on 2026-10-13 against the current stable releases, Cilium 1.20.2 and Talos v1.14.2:
 
