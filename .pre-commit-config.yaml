@@ -11,3 +11,6 @@ repos:
     hooks:
       - id: gitleaks
         entry: scripts/secret-scan.sh staged
+        # DEMONSTRATION ONLY. DO NOT MERGE. Print the hook's output when it
+        # passes too, so the log shows what gitleaks read.
+        verbose: true
