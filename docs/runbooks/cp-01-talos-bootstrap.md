@@ -74,11 +74,11 @@ Configure the following settings:
 
 The first time, run a, b and c. For each later USB drive (cp-02, cp-03, or a new drive), run a and c. The drive is written only if the file matches the recorded checksum.
 
-**a. Every time.** In a terminal at the repository root, read the pins and name the ISO file after them: the Talos version and the first 8 characters of the schematic ID. The name keeps it apart from the stock `metal-amd64.iso` used for discovery. If `source` did not set the pins, the third line fails with `TALOS_VERSION: run source first`: stop there.
+**a. Every time.** In a terminal at the repository root, read the pins, check `talosctl`, and name the ISO file after them: the Talos version and the first 8 characters of the schematic ID. The name keeps it apart from the stock `metal-amd64.iso` used for discovery. The second line prints the `Tag` line only if `talosctl` is the pinned release; if it prints nothing, stop and install that release. If `source` did not set the pins, the second line fails with `TALOS_VERSION: run source first`: stop there.
 
 ```bash
 source platform/talos/clusters/home-prod/metadata.env
-talosctl version --client
+talosctl version --client | grep -E "Tag: +${TALOS_VERSION:?run source first}$"
 ISO="$HOME/Downloads/talos-${TALOS_VERSION:?run source first}-${TALOS_SCHEMATIC_ID:0:8}-metal-amd64.iso"
 echo "$ISO"
 ```
