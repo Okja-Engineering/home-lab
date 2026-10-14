@@ -12,7 +12,7 @@ See [Physical Topology](../diagrams/physical-topology.md) for a visual represent
 
 - **Network Type:** Flat network (no VLANs initially)
 - **Subnet:** 10.0.0.0/24
-- **Gateway:** 10.0.0.1
+- **Gateway:** `DEFAULT_GATEWAY` in [`metadata.env`](../platform/talos/clusters/home-prod/metadata.env)
 - **DNS:** Public resolvers: `DNS_SERVERS` in [`metadata.env`](../platform/talos/clusters/home-prod/metadata.env). The gateway is not one of them
 - **Domain:** lab.home.arpa (provisional)
 
@@ -58,7 +58,7 @@ Do not record MAC addresses in this repository. ADR-007 selects network ports wi
 ### Router
 
 - **Role:** Default gateway, DHCP server (an ISP-supplied gateway). Not a DNS server for the nodes: theirs are `DNS_SERVERS` in [`metadata.env`](../platform/talos/clusters/home-prod/metadata.env)
-- **IP:** 10.0.0.1
+- **IP:** `DEFAULT_GATEWAY` in [`metadata.env`](../platform/talos/clusters/home-prod/metadata.env)
 - **Management:** Web UI or SSH
 
 ### Switch
@@ -129,7 +129,7 @@ VLANs are deferred ([ADR-002](adr/002-start-with-flat-network.md)) and need a ma
 
 ### API Access
 
-- **Talos API and Kubernetes API:** Not restricted yet. [ADR-013](adr/013-define-management-access-boundaries.md) defines the management sources (`MGMT_SOURCES` in [`metadata.env`](../platform/talos/clusters/home-prod/metadata.env)); [issue 25](https://github.com/Okja-Engineering/home-lab/issues/25) writes the policy and [issue 29](https://github.com/Okja-Engineering/home-lab/issues/29) enforces it
+- **Talos API and Kubernetes API:** Not restricted yet. [ADR-013](adr/013-define-management-access-boundaries.md) requires defined management sources; `MGMT_SOURCES` in [`metadata.env`](../platform/talos/clusters/home-prod/metadata.env) holds the management workstation's address; [issue 25](https://github.com/Okja-Engineering/home-lab/issues/25) writes the policy and [issue 29](https://github.com/Okja-Engineering/home-lab/issues/29) enforces it
 - **Future:** Consider VPN or bastion for remote access
 
 ### Firewall Rules
