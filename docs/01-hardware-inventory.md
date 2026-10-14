@@ -40,13 +40,14 @@ The management workstation used for cluster operations:
 
 ## Network Equipment
 
-- **Router:** Home router (10.0.0.1)
-- **Switch:** TP-Link Omada 10-port Gigabit Smart PoE+ (purchased, configuration deferred)
+- **Router:** ISP-supplied gateway (10.0.0.1)
+- **Switch:** Netgear GS308, 8-port gigabit, unmanaged
+  - **Connection:** Plugged directly into a LAN port on the gateway; cp-01, cp-02 and cp-03 are cabled to it
+- **Spare switch:** TP-Link Omada 10-port Gigabit Smart PoE+
   - **Source:** Micro Center (~$114)
-  - **Model:** Exact model TBD until verified
+  - **Model:** Exact model not verified
   - **Capabilities:** Managed, PoE, VLAN-capable
-  - **Status:** Purchased, configuration deferred
-  - **Note:** Not required for initial Talos bootstrap
+  - **Status:** A spare, not in the network path
 
 ## Future Hardware
 

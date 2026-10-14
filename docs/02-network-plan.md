@@ -61,15 +61,12 @@ Do not record MAC addresses in this repository. ADR-007 selects network ports wi
 - **IP:** 10.0.0.1
 - **Management:** Web UI or SSH
 
-### Switch (Purchased, Configuration Deferred)
+### Switch
 
-- **Model:** TP-Link Omada 10-port Gigabit Smart PoE+ (exact model TBD until verified)
-- **Source:** Micro Center (~$114)
-- **Status:** Purchased, configuration deferred
-- **Capabilities:** Managed, PoE, VLAN-capable
-- **Role:** Future network foundation, VLAN support
-- **Management:** Omada controller (planned)
-- **Note:** Not required for initial Talos bootstrap
+- **Model:** Netgear GS308, 8-port gigabit, unmanaged
+- **Connection:** Plugged directly into a LAN port on the ISP-supplied gateway; cp-01, cp-02 and cp-03 are cabled to it
+- **Configuration:** None: it is unmanaged, so it has no VLANs and its ports are not mapped
+- **Spare:** A TP-Link Omada switch, not in the network path ([Spare Switch](#spare-switch))
 
 ### Workstation
 
@@ -84,14 +81,14 @@ Do not record MAC addresses in this repository. ADR-007 selects network ports wi
 ```
 Internet
     |
-Router (10.0.0.1)
+Router (10.0.0.1) --(Wi-Fi)-- Workstation
+    |                         DHCP
+Switch (GS308)
     |
-Switch (Omada, purchased, configuration deferred)
-    |
-+---+---+---+
-|   |   |   |
-cp-01 cp-02 cp-03 Workstation
-.21   .22   .23   DHCP
+    +-------+-------+
+    |       |       |
+  cp-01   cp-02   cp-03
+   .21     .22     .23
 ```
 
 ## DNS Configuration
@@ -115,21 +112,18 @@ cp-01 cp-02 cp-03 Workstation
 
 ### VLAN Implementation (Deferred)
 
-VLANs will be implemented after the control plane is stable. Potential VLANs:
+VLANs are deferred ([ADR-002](adr/002-start-with-flat-network.md)) and need a managed switch: managed switching is revisited when VLAN separation is decided. Potential VLANs:
 
 - **VLAN 10:** Control plane
 - **VLAN 20:** Worker nodes
 - **VLAN 30:** Storage
 - **VLAN 40:** Management
 
-### Omada Switch Integration (Deferred)
+### Spare Switch
 
-- Switch is purchased but configuration is deferred
-- Install and configure TP-Link Omada switch (deferred)
-- Set up Omada controller for management (deferred)
-- Configure port-based VLANs (deferred)
-- Document physical port mapping (deferred)
-- **Note:** Switch configuration is not required for initial Talos bootstrap
+- **Model:** TP-Link Omada 10-port Gigabit Smart PoE+ (exact model not verified)
+- **Capabilities:** Managed, PoE, VLAN-capable
+- **Status:** A spare, not in the network path
 
 ## Network Security
 
@@ -150,4 +144,4 @@ VLANs will be implemented after the control plane is stable. Potential VLANs:
 - VLANs add complexity and should be deferred
 - Stable node addresses are critical for control plane operation; [ADR-007](adr/007-configure-static-node-addresses.md) says why, and how the addresses are assigned
 - Domain is internal only, no public DNS assumed
-- Omada switch installation is pending but not blocking initial bootstrap
+- The bootstrap uses the unmanaged GS308, which needs no configuration

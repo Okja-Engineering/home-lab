@@ -31,7 +31,7 @@ The bootstrap process transforms bare GMKtec mini PCs into a Talos Kubernetes co
 
 - Workstation has talosctl and kubectl installed
 - 3x GMKtec mini PCs are available
-- TP-Link Omada switch is available (configuration not required)
+- Netgear GS308 switch is plugged directly into the gateway (unmanaged: no configuration)
 - Router access for DHCP reservations and DNS
 
 ### Step 1: Hardware Preparation
