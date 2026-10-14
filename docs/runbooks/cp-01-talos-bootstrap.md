@@ -9,8 +9,8 @@ This runbook provides detailed execution steps for bootstrapping cp-01, the firs
 **Prerequisites:**
 - Workstation has talosctl and kubectl installed
 - GMKtec mini PC (cp-01) is available
-- Router access for DHCP reservations and DNS
-- TP-Link Omada switch is available (configuration not required)
+- Access to the ISP-supplied gateway for DHCP reservations and DNS
+- Netgear GS308 switch is plugged directly into a LAN port on the ISP-supplied gateway (unmanaged: no configuration), and cp-01 is cabled to it
 
 ---
 

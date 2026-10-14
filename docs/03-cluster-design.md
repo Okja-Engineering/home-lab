@@ -136,7 +136,7 @@ Worker nodes will be added after:
 - Flat network (10.0.0.0/24)
 - No VLANs initially
 - Static node addresses, to be set in the Talos machine config ([ADR-007](adr/007-configure-static-node-addresses.md))
-- DNS servers for the nodes to be confirmed in [issue 16](https://github.com/Okja-Engineering/home-lab/issues/16), step 4
+- DNS servers for the nodes: public resolvers listed in [`metadata.env`](../platform/talos/clusters/home-prod/metadata.env) (`DNS_SERVERS`); the gateway is not one
 
 ### Future Network
 
@@ -151,7 +151,7 @@ Worker nodes will be added after:
 
 - Talos immutable OS
 - No SSH access to nodes
-- API access restricted to local subnet
+- API access not restricted yet ([ADR-013](adr/013-define-management-access-boundaries.md))
 - Secrets not committed to Git
 - Pod Security Admission, which Talos enables by default (PodSecurityPolicy, which it replaced, was removed in Kubernetes 1.25)
 - Kubernetes Secret encryption at rest, which Talos enables by default

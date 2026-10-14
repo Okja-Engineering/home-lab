@@ -55,3 +55,11 @@ Checking the gateway's client list against the planned ranges, choosing the DNS 
 ## Review Notes
 
 Revisit this decision if the gateway's DHCP pool stops excluding the planned ranges, for example after the gateway is reset or replaced, if a device is found on one of the planned addresses, or if the nodes turn out to be on a different network.
+
+## Clarifying Note
+
+Added 2026-10-14. The accepted text above is unchanged.
+
+Three things are now decided for [issue 16](https://github.com/Okja-Engineering/home-lab/issues/16). The nodes' DNS servers are 1.1.1.1 and 9.9.9.9, recorded as `DNS_SERVERS` in [`metadata.env`](../../platform/talos/clusters/home-prod/metadata.env); the gateway is not one of them. The name `k8s.lab.home.arpa` is dropped: the Kubernetes API endpoint is the VIP, `CLUSTER_ENDPOINT`, and `API_DNS_NAME` is empty. The management workstation's address is the management source, `MGMT_SOURCES`, as [ADR-013](013-define-management-access-boundaries.md) requires management sources to be defined. These supersede the sentence under Impact that marks the DNS servers as to be confirmed, and, under Not Doing Yet, choosing the DNS servers and deciding on the name.
+
+The address plan's values are now in `metadata.env`: `CLUSTER_VIP`, `CP_01_IP` to `CP_03_IP`, `DHCP_POOL`, `WORKER_RANGE` and `LB_POOL`. The VIP, node, worker and application addresses are still planned: no node holds them yet. The other items under Not Doing Yet stay with issue 16, and the remaining checks of the planned addresses are tracked in the network plan's [Router check](../02-network-plan.md#router-check).

@@ -23,7 +23,7 @@ Talos Linux cluster configuration for home production environment.
 
 ## Bootstrap Plan
 
-**Not yet updated for ADR-005 to ADR-013.** This section, parts of the [Notes](#notes) below, `metadata.env` and both runbooks still follow the original plan: DHCP reservations for the nodes, a DNS name pointing at cp-01 as the endpoint, and bootstrap after all three nodes are configured. Where any of them disagrees with an [ADR](../../../../docs/adr/README.md), the ADR is current. [Issue 22](https://github.com/Okja-Engineering/home-lab/issues/22) will rewrite this section and the runbooks. [Issue 16](https://github.com/Okja-Engineering/home-lab/issues/16) will update `metadata.env`. [Issue 24](https://github.com/Okja-Engineering/home-lab/issues/24) will then check that nothing else, the Notes included, contradicts the ADRs.
+**Not yet updated for ADR-005 to ADR-013.** This section, parts of the [Notes](#notes) below and both runbooks still follow the original plan: DHCP reservations for the nodes, a DNS name pointing at cp-01 as the endpoint, and bootstrap after all three nodes are configured. Where any of them disagrees with an [ADR](../../../../docs/adr/README.md), the ADR is current. [Issue 22](https://github.com/Okja-Engineering/home-lab/issues/22) will rewrite this section and the runbooks. [Issue 24](https://github.com/Okja-Engineering/home-lab/issues/24) will then check that nothing else, the Notes included, contradicts the ADRs.
 
 The bootstrap process transforms bare GMKtec mini PCs into a Talos Kubernetes control plane. This is a high-level plan; detailed execution steps are in the cp-01 runbook.
 
@@ -31,8 +31,8 @@ The bootstrap process transforms bare GMKtec mini PCs into a Talos Kubernetes co
 
 - Workstation has talosctl and kubectl installed
 - 3x GMKtec mini PCs are available
-- TP-Link Omada switch is available (configuration not required)
-- Router access for DHCP reservations and DNS
+- Netgear GS308 switch is plugged directly into a LAN port on the ISP-supplied gateway (unmanaged: no configuration), and cp-01, cp-02 and cp-03 are cabled to it
+- Access to the ISP-supplied gateway for DHCP reservations and DNS
 
 ### Step 1: Hardware Preparation
 
