@@ -54,7 +54,7 @@ graph TB
 
 ### Router
 
-- **Role:** Default gateway, DHCP server (an ISP-supplied gateway). Not confirmed as a DNS forwarder: see [issue 16](https://github.com/Okja-Engineering/home-lab/issues/16), step 4
+- **Role:** Default gateway, DHCP server (an ISP-supplied gateway)
 - **IP:** 10.0.0.1
 - **Management:** Web UI or SSH
 

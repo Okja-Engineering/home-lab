@@ -12,7 +12,7 @@ The control plane consists of 3 GMKtec mini PCs. Exact specifications will be fi
 
 ## Planned IP Addresses
 
-Control plane IP addresses are planned static addresses ([ADR-007](adr/007-configure-static-node-addresses.md)). They are not yet confirmed on the router:
+Control plane IP addresses are planned static addresses ([ADR-007](adr/007-configure-static-node-addresses.md)), outside the gateway's DHCP pool; what was checked is under [Router check](02-network-plan.md#router-check):
 
 - **cp-01:** 10.0.0.21
 - **cp-02:** 10.0.0.22

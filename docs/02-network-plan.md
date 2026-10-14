@@ -13,39 +13,43 @@ See [Physical Topology](../diagrams/physical-topology.md) for a visual represent
 - **Network Type:** Flat network (no VLANs initially)
 - **Subnet:** 10.0.0.0/24
 - **Gateway:** 10.0.0.1
-- **DNS:** To be confirmed in [issue 16](https://github.com/Okja-Engineering/home-lab/issues/16), step 4. The gateway is not assumed to be a DNS server for the nodes
+- **DNS:** Public resolvers: `DNS_SERVERS` in [`metadata.env`](../platform/talos/clusters/home-prod/metadata.env). The gateway is not one of them
 - **Domain:** lab.home.arpa (provisional)
 
 ### Control Plane IP Addresses (Planned)
 
-Control plane IP addresses are planned static addresses ([ADR-007](adr/007-configure-static-node-addresses.md)). They are not yet confirmed on the router:
+Control plane IP addresses are planned static addresses ([ADR-007](adr/007-configure-static-node-addresses.md)), outside the gateway's DHCP pool; what was checked is under [Router check](#router-check). Each is recorded in [`metadata.env`](../platform/talos/clusters/home-prod/metadata.env):
 
-| Node | Planned IP | Status |
+| Node | Address in `metadata.env` | Status |
 |---|---|---|
-| cp-01 | 10.0.0.21 | Planned / Unconfirmed |
-| cp-02 | 10.0.0.22 | Planned / Unconfirmed |
-| cp-03 | 10.0.0.23 | Planned / Unconfirmed |
-
-**Action Required:** Complete the router check under [Node Addressing](#node-addressing) before Talos installation.
+| cp-01 | `CP_01_IP` | Planned |
+| cp-02 | `CP_02_IP` | Planned |
+| cp-03 | `CP_03_IP` | Planned |
 
 ### Cluster Endpoint
 
 - **Cluster Endpoint:** A Talos shared virtual IP (VIP), not a DNS record pointing at cp-01 ([ADR-006](adr/006-use-talos-vip-for-kubernetes-api-endpoint.md))
 - **Port:** 6443
 
-The VIP address is given in ADR-006. Like the node addresses, it is planned and not yet confirmed on the router.
+The VIP is `CLUSTER_VIP` in [`metadata.env`](../platform/talos/clusters/home-prod/metadata.env), and the endpoint is `CLUSTER_ENDPOINT`. Like the node addresses, the VIP is planned and outside the gateway's DHCP pool; what was checked is under [Router check](#router-check).
 
 ## Node Addressing
 
 The nodes will not use DHCP reservations. Each node's address will be set in its Talos machine config ([ADR-007](adr/007-configure-static-node-addresses.md)).
 
-### Router Check Before Talos Installation
+### Router Check
 
-The address plan has been partly checked against the router. [ADR-014](adr/014-rebase-address-plan-onto-10-0-0-0-24.md) records under Impact what was checked, and [issue 16](https://github.com/Okja-Engineering/home-lab/issues/16) tracks what is left. Before Talos installation:
+The planned addresses are in [`metadata.env`](../platform/talos/clusters/home-prod/metadata.env): `CLUSTER_VIP`, `CP_01_IP` to `CP_03_IP`, `WORKER_RANGE` and `LB_POOL`. What has been checked against the ISP-supplied gateway so far:
 
-1. Log into router or Omada controller
-2. Confirm the DHCP pool does not include the node addresses or the cluster VIP
-3. Confirm no other device is using those addresses
+- On 2026-10-13 the gateway's DHCP pool was set to `DHCP_POOL` and the saved values were read back. Every planned address is outside it.
+- On 2026-10-13 a ping and ARP check from the workstation got no reply from any of the twenty planned addresses. A silent ping is not proof: a device that is asleep or switched off does not reply.
+
+Still to check ([issue 16](https://github.com/Okja-Engineering/home-lab/issues/16)): the gateway's device list, online and offline, its leases and its reservations; then the ping and ARP check and the leases again, after any old lease could have expired.
+
+Later checks:
+
+- During installation, a final conflict check right before the addresses are assigned ([issue 22](https://github.com/Okja-Engineering/home-lab/issues/22)).
+- After the gateway is reset or replaced, the whole check again: its DHCP pool may no longer exclude the planned addresses ([ADR-014](adr/014-rebase-address-plan-onto-10-0-0-0-24.md)).
 
 Do not record MAC addresses in this repository. ADR-007 selects network ports without them.
 
@@ -53,7 +57,7 @@ Do not record MAC addresses in this repository. ADR-007 selects network ports wi
 
 ### Router
 
-- **Role:** Default gateway, DHCP server (an ISP-supplied gateway). Not confirmed as a DNS forwarder: see [issue 16](https://github.com/Okja-Engineering/home-lab/issues/16), step 4
+- **Role:** Default gateway, DHCP server (an ISP-supplied gateway). Not a DNS server for the nodes: theirs are `DNS_SERVERS` in [`metadata.env`](../platform/talos/clusters/home-prod/metadata.env)
 - **IP:** 10.0.0.1
 - **Management:** Web UI or SSH
 
@@ -101,7 +105,7 @@ cp-01 cp-02 cp-03 Workstation
 ### DNS Records to Create
 
 1. **Cluster Endpoint:**
-   - None required: the endpoint is the VIP, an IP address. [ADR-006](adr/006-use-talos-vip-for-kubernetes-api-endpoint.md) says what the `k8s.lab.home.arpa` name may still be used for.
+   - None: the endpoint is the VIP, an IP address (`CLUSTER_ENDPOINT` in [`metadata.env`](../platform/talos/clusters/home-prod/metadata.env)). The name `k8s.lab.home.arpa`, which [ADR-006](adr/006-use-talos-vip-for-kubernetes-api-endpoint.md) allowed as an extra API server certificate name, is not used: it was dropped on 2026-10-13, and `API_DNS_NAME` is empty.
 
 2. **Future Service Records:**
    - Service DNS will be configured after cluster bootstrap
