@@ -17,13 +17,9 @@ This repository serves two goals:
 
 Phase 1 is done: Milestone 1 (Talos Control Plane Foundation) is complete. The repo has planning docs, ADRs, diagrams, network plan, Talos source structure, and bootstrap runbooks.
 
-The current work in Phase 2 is cp-01 Talos discovery:
-- Physically boot cp-01 into Talos maintenance mode
-- Confirm hardware and network facts
-- Identify network interface and install disk
-- Update metadata with confirmed values
+Talos discovery is done on all three control-plane machines. The network interface, install disk and CPU it confirmed are recorded in [`platform/talos/clusters/home-prod/metadata.env`](platform/talos/clusters/home-prod/metadata.env). The current work in Phase 2 is Milestone 2 (Ready to install cp-01), tracked in [issue 14](https://github.com/Okja-Engineering/home-lab/issues/14).
 
-**Stop point:** Do not generate Talos secrets or machine configs until discovery is complete.
+**Stop point:** Do not generate the cluster's real Talos secrets until [issue 18](https://github.com/Okja-Engineering/home-lab/issues/18) is closed, and then only once, as [issue 19](https://github.com/Okja-Engineering/home-lab/issues/19) describes. Do not generate machine configs from them until [issue 20](https://github.com/Okja-Engineering/home-lab/issues/20) is closed.
 
 ## Target Architecture
 
