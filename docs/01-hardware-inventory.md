@@ -12,13 +12,13 @@ The control plane consists of 3 GMKtec mini PCs. Exact specifications will be fi
 
 ## Planned IP Addresses
 
-Control plane IP addresses are planned static addresses ([ADR-007](adr/007-configure-static-node-addresses.md)). They are not yet confirmed on the router:
+Control plane IP addresses are planned static addresses ([ADR-007](adr/007-configure-static-node-addresses.md)), outside the gateway's DHCP pool; what was checked is under [Router check](02-network-plan.md#router-check):
 
 - **cp-01:** 10.0.0.21
 - **cp-02:** 10.0.0.22
 - **cp-03:** 10.0.0.23
 
-Each address will be set in the node's Talos machine config, not reserved in DHCP. The router check to do before Talos installation is in the [Network Plan](02-network-plan.md#node-addressing).
+Each address will be set in the node's Talos machine config, not reserved in DHCP.
 
 ## Hardware Details to Collect
 
@@ -40,13 +40,14 @@ The management workstation used for cluster operations:
 
 ## Network Equipment
 
-- **Router:** Home router (10.0.0.1)
-- **Switch:** TP-Link Omada 10-port Gigabit Smart PoE+ (purchased, configuration deferred)
+- **Router:** ISP-supplied gateway (10.0.0.1)
+- **Switch:** Netgear GS308, 8-port gigabit, unmanaged
+  - **Connection:** Plugged directly into a LAN port on the gateway; cp-01, cp-02 and cp-03 are cabled to it
+- **Spare switch:** TP-Link Omada 10-port Gigabit Smart PoE+
   - **Source:** Micro Center (~$114)
-  - **Model:** Exact model TBD until verified
+  - **Model:** Exact model not verified
   - **Capabilities:** Managed, PoE, VLAN-capable
-  - **Status:** Purchased, configuration deferred
-  - **Note:** Not required for initial Talos bootstrap
+  - **Status:** A spare, not in the network path
 
 ## Future Hardware
 

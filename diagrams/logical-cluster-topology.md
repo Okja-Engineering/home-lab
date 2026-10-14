@@ -46,9 +46,9 @@ graph TB
     Platform -.-> Apps
     apiserver -.-> Workers
 
-    classDef target fill:#87CEEB,stroke:#4682B4,stroke-width:2px
-    classDef planned fill:#FFD700,stroke:#DAA520,stroke-width:2px,stroke-dasharray: 5 5
-    classDef future fill:#D3D3D3,stroke:#808080,stroke-width:2px,stroke-dasharray: 2 2
+    classDef target fill:#87CEEB,stroke:#4682B4,stroke-width:2px,color:#000
+    classDef planned fill:#FFD700,stroke:#DAA520,stroke-width:2px,stroke-dasharray: 5 5,color:#000
+    classDef future fill:#D3D3D3,stroke:#808080,stroke-width:2px,stroke-dasharray: 2 2,color:#000
 
     class Workstation,VIP,cp01,cp02,cp03,etcd,k8s,apiserver,scheduler,controller,Cilium target
     class Flux,Platform,Apps planned
@@ -62,7 +62,7 @@ Reading the diagram:
 - **Endpoint:** The edge labelled kubectl goes to the Kubernetes API endpoint, a Talos shared VIP that one healthy control-plane node holds at a time. The diagram draws the VIP on cp-01 as an example; cp-02 or cp-03 can hold it instead. The edges labelled talosctl go to each node's own address: talosctl never uses the VIP ([ADR-006](../docs/adr/006-use-talos-vip-for-kubernetes-api-endpoint.md)).
 - **State:** Each node runs the control plane components and one etcd member. kube-apiserver reads and writes cluster state in etcd.
 - **CNI:** Cilium is installed during bootstrap and replaces kube-proxy ([ADR-005](../docs/adr/005-use-cilium-with-kube-proxy-replacement.md)).
-- **Addresses:** The VIP and node addresses are the planned values from ADR-006 and [ADR-007](../docs/adr/007-configure-static-node-addresses.md). They are not yet confirmed on the router.
+- **Addresses:** The VIP and node addresses are the planned values from ADR-006 and [ADR-007](../docs/adr/007-configure-static-node-addresses.md), recorded in [`metadata.env`](../platform/talos/clusters/home-prod/metadata.env). They are outside the gateway's DHCP pool; what was checked is under [Router check](../docs/02-network-plan.md#router-check).
 
 ## Control Plane Components
 
