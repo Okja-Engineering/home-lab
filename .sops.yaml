@@ -1,0 +1,8 @@
+# SOPS creation rule for the Talos secrets bundle. The age: line holds the
+# owner's age X25519 public key (age1...). It is public. A private key never
+# goes in this file, or anywhere else in the repo.
+# scripts/sops-recipients-check.sh checks that this file is exactly this one
+# rule with one such recipient, and checks the encrypted bundle against it.
+creation_rules:
+  - path_regex: platform/talos/clusters/.*/secrets\.sops\.yaml$
+    age: age1r2agtnlhpj0ky4878u9gschs7x360g93tk6whwdlmrpqpadtyumsaa7d9l
