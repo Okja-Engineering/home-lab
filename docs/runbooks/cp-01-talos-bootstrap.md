@@ -83,7 +83,7 @@ ISO="$HOME/Downloads/talos-${TALOS_VERSION:?run source first}-${TALOS_SCHEMATIC_
 echo "$ISO"
 ```
 
-**b. First time, or if the file is gone.** Download the ISO and print its SHA-256. If the download fails, `curl` exits with an error and no checksum is printed. The first time only, record the 64-character value in `docs/runbooks/cp-01-talos-bootstrap.md`: replace `not recorded yet` in block c with it, and commit that change to the repository. If block c later reports the file missing (`FAILED open or read`), it has written nothing: run b again, then c, which checks the new download against the recorded value. Never replace a recorded value.
+**b. First time, or if the file is gone.** Download the ISO and print its SHA-256. If the download fails, `curl` exits with an error and no checksum is printed. The first time only, record the 64-character value in `docs/runbooks/cp-01-talos-bootstrap.md`: replace `not recorded yet` in block c with it, and commit that change to the repository. If block c reports `FAILED open or read`, it has written nothing. Right after recording, first check that the `ISO_SHA256` line holds just the 64 characters, with no space or other text; correcting that is not replacing the value. Otherwise the file is gone: run b again, then c, which checks the new download against the recorded value. Never replace a recorded value.
 
 ```bash
 curl -fL -o "$ISO" "${TALOS_ISO_URL:?run source first}" && shasum -a 256 "$ISO"
