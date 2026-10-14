@@ -10,6 +10,11 @@ rules:
   # the default limit of 80.
   line-length:
     max: 120
+    # sops writes each encrypted value of the Talos secrets bundle on one
+    # line, longer than any limit. Only this rule skips the bundle. The path
+    # is relative to the repository root, where the yaml-lint job runs.
+    ignore: |
+      platform/talos/clusters/*/secrets.sops.yaml
   # "on:" is a GitHub Actions key, not a boolean.
   truthy:
     check-keys: false
