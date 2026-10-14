@@ -77,7 +77,7 @@ Worker nodes will be added after the control plane is stable. Categories:
 
 ## Notes
 
-- The control-plane hardware facts are in [`metadata.env`](../platform/talos/clusters/home-prod/metadata.env). This page names where each one is rather than repeating it, so a change is made there alone
+- The control-plane hardware facts are in [`metadata.env`](../platform/talos/clusters/home-prod/metadata.env), and this page names where each one is. Of those facts, it repeats only the maker label, GMKtec mini PC, which matches `metadata.env`
 - MAC addresses are not needed: under [ADR-007](adr/007-configure-static-node-addresses.md), node addresses will be static and network ports will be selected without MAC addresses
 - Serial numbers are optional but useful for warranty tracking
 - Do not commit sensitive hardware details (e.g., MAC addresses): this repository is public
