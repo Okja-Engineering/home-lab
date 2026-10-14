@@ -94,7 +94,7 @@ curl -fL -o "$ISO" "${TALOS_ISO_URL:?run source first}" && shasum -a 256 "$ISO"
 ```bash
 USB_DISK=""
 ISO_SHA256="ab6396a1680964412e71dd9e97d449044c6ae8986104558dba4b7d8391a481fb"
-echo "$ISO_SHA256  $ISO" | shasum -a 256 -c &&
+echo "$ISO_SHA256  ${ISO:?run block a first}" | shasum -a 256 -c &&
 diskutil list "/dev/${USB_DISK:?set it to the USB drive from diskutil list}" | grep -Fx "/dev/$USB_DISK (external, physical):" &&
 diskutil unmountDisk "/dev/$USB_DISK" &&
 sudo dd if="$ISO" of="/dev/r$USB_DISK" bs=1m
