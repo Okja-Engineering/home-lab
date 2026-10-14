@@ -49,51 +49,18 @@ The phases are defined in [Goals](00-goals.md#phases). Phase 1, the repository f
 - Control plane health validation
 - Documentation and runbooks
 
-### In Scope (Phase 3 - Planned)
+### Out of Scope for Now
 
-- Ingress controller
-- Storage classes
-- Basic monitoring
-
-### In Scope (Phase 4 - Planned)
-
-- GitOps with Flux
-
-### Out of Scope (Deferred)
-
-- Worker nodes (stateful and stateless)
-- VLAN implementation
-- Public DNS or external certificates
+- VLANs: an [open decision](adr/README.md#open-decisions)
+- Public DNS or external certificates: an [open decision](adr/README.md#open-decisions), tied to application DNS and TLS in [issue 30](https://github.com/Okja-Engineering/home-lab/issues/30); public access itself is Phase 7
 - Service mesh
-- GPU workloads
+- GPU workloads: Phase 5 at the earliest; where they run is an [open decision](adr/README.md#open-decisions)
 - Multi-cluster management
 - Advanced security features
 
-## Worker Node Strategy (Future)
+## Workers
 
-### Planned Worker Categories
-
-1. **Stateful Workers**
-   - Purpose: Databases, persistent storage workloads
-   - Storage: Local storage or CSI
-   - Count: TBD
-
-2. **Stateless/Platform Workers**
-   - Purpose: Ingress, monitoring, logging, platform services
-   - Storage: Ephemeral
-   - Count: TBD
-
-3. **AI/GPU Worker (Deferred)**
-   - Purpose: Machine learning workloads
-   - Hardware: GPU-capable
-   - Count: TBD
-
-### Worker Node Timing
-
-Worker nodes will be added after:
-- Control plane is stable and healthy, which includes Cilium ([ADR-005](adr/005-use-cilium-with-kube-proxy-replacement.md))
-- Storage classes are configured
-- Monitoring is collecting metrics
+Workers come first in Phase 3, before the recoverable platform services ([Goals](00-goals.md#phases)). The worker roles, the candidate machines and the rules for workloads on the control plane are in [Workload Placement](05-workload-placement.md).
 
 ## Cluster Components
 
@@ -141,7 +108,7 @@ Worker nodes will be added after:
 
 ### Future Network
 
-- VLAN segmentation (deferred)
+- VLAN segmentation: an [open decision](adr/README.md#open-decisions)
 - Network policies via Cilium
 - Service mesh (deferred)
 - Ingress with TLS (deferred)
@@ -173,10 +140,7 @@ Worker nodes will be added after:
 
 ### Worker Nodes
 
-- Start with 0 workers
-- Add workers based on workload needs
-- Separate stateful and stateless workers
-- Consider GPU worker for ML workloads
+- See [Workers](#workers)
 
 ## Disaster Recovery
 
@@ -196,6 +160,6 @@ Worker nodes will be added after:
 ## Notes
 
 - Cluster design is focused on control plane foundation
-- Worker nodes and advanced features are explicitly deferred
+- Workers come next, in Phase 3; advanced features stay out of scope for now
 - Design prioritizes learning and understanding over complexity
 - Scope is bounded to enable incremental progress
