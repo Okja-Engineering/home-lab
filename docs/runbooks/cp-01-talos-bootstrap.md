@@ -89,13 +89,18 @@ echo "$ISO"
 curl -fL -o "$ISO" "$TALOS_ISO_URL" && shasum -a 256 "$ISO"
 ```
 
-**c. Each USB drive.** Check the file against the recorded SHA-256, then write the drive (macOS; this erases it). Replace `disk2` with the USB drive shown by `diskutil list`. `dd` runs only if `shasum` prints `OK`; while no checksum is recorded, the check fails.
+**c. Each USB drive.** Run `diskutil list` on its own and find the USB drive: its line says `(external, physical)` and shows the drive's size. Copy the second block, put that drive's identifier (`disk` and a number) between the quotes on its first line, then run it; it erases that drive. Nothing is unmounted or written unless `USB_DISK` is set and `shasum` prints `OK`; while no checksum is recorded, the check fails.
 
 ```bash
-ISO_SHA256="not recorded yet"
 diskutil list
-diskutil unmountDisk /dev/disk2
-echo "$ISO_SHA256  $ISO" | shasum -a 256 -c && sudo dd if="$ISO" of=/dev/rdisk2 bs=1m
+```
+
+```bash
+USB_DISK=""
+ISO_SHA256="not recorded yet"
+echo "$ISO_SHA256  $ISO" | shasum -a 256 -c &&
+diskutil unmountDisk "/dev/${USB_DISK:?set it to the USB drive from diskutil list}" &&
+sudo dd if="$ISO" of="/dev/r$USB_DISK" bs=1m
 ```
 
 **Do not proceed until:** the ISO's SHA-256 is recorded in block c, and block c printed `OK` and wrote the USB drive.
