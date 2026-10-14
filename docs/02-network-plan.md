@@ -135,8 +135,7 @@ VLANs will be implemented after the control plane is stable. Potential VLANs:
 
 ### API Access
 
-- **Talos API:** Restricted to 10.0.0.0/24 initially
-- **Kubernetes API:** Restricted to 10.0.0.0/24 initially
+- **Talos API and Kubernetes API:** Not restricted yet. [ADR-013](adr/013-define-management-access-boundaries.md) defines the management sources (`MGMT_SOURCES` in [`metadata.env`](../platform/talos/clusters/home-prod/metadata.env)); [issue 25](https://github.com/Okja-Engineering/home-lab/issues/25) writes the policy and [issue 29](https://github.com/Okja-Engineering/home-lab/issues/29) enforces it
 - **Future:** Consider VPN or bastion for remote access
 
 ### Firewall Rules

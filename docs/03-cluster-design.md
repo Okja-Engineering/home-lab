@@ -151,7 +151,7 @@ Worker nodes will be added after:
 
 - Talos immutable OS
 - No SSH access to nodes
-- API access restricted to local subnet
+- API access not restricted yet ([ADR-013](adr/013-define-management-access-boundaries.md))
 - Secrets not committed to Git
 - Pod Security Admission, which Talos enables by default (PodSecurityPolicy, which it replaced, was removed in Kubernetes 1.25)
 - Kubernetes Secret encryption at rest, which Talos enables by default
