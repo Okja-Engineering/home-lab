@@ -23,7 +23,7 @@ Talos Linux cluster configuration for home production environment.
 
 ## Bootstrap Plan
 
-**Not yet updated for ADR-005 to ADR-013.** This section, parts of the [Notes](#notes) below, `metadata.env` and both runbooks still follow the original plan: DHCP reservations for the nodes, a DNS name pointing at cp-01 as the endpoint, and bootstrap after all three nodes are configured. Where any of them disagrees with an [ADR](../../../../docs/adr/README.md), the ADR is current. [Issue 22](https://github.com/Okja-Engineering/home-lab/issues/22) will rewrite this section and the runbooks. Issues [16](https://github.com/Okja-Engineering/home-lab/issues/16) and [17](https://github.com/Okja-Engineering/home-lab/issues/17) will update `metadata.env`. [Issue 24](https://github.com/Okja-Engineering/home-lab/issues/24) will then check that nothing else, the Notes included, contradicts the ADRs.
+**Not yet updated for ADR-005 to ADR-013.** This section, parts of the [Notes](#notes) below, `metadata.env` and both runbooks still follow the original plan: DHCP reservations for the nodes, a DNS name pointing at cp-01 as the endpoint, and bootstrap after all three nodes are configured. Where any of them disagrees with an [ADR](../../../../docs/adr/README.md), the ADR is current. [Issue 22](https://github.com/Okja-Engineering/home-lab/issues/22) will rewrite this section and the runbooks. [Issue 16](https://github.com/Okja-Engineering/home-lab/issues/16) will update `metadata.env`. [Issue 24](https://github.com/Okja-Engineering/home-lab/issues/24) will then check that nothing else, the Notes included, contradicts the ADRs.
 
 The bootstrap process transforms bare GMKtec mini PCs into a Talos Kubernetes control plane. This is a high-level plan; detailed execution steps are in the cp-01 runbook.
 
@@ -85,7 +85,7 @@ See [docs/runbooks/three-node-control-plane-bootstrap.md](../../../../docs/runbo
 - Regenerate machine configs after modifying `metadata.env` or patches
 - MAC addresses are documented locally for DHCP reservations, not committed to Git
 - Network interface names must be confirmed via Talos before config generation
-- Version pins are provisional - verify Talos/Kubernetes compatibility before use
+- Versions are pinned in `metadata.env` - use those versions
 
 ## Patch Readiness Warning
 

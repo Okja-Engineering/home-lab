@@ -67,31 +67,40 @@ Configure the following settings:
 
 ### Step 3: Create Talos Bootable USB
 
-**Select Talos ISO version intentionally before flashing USB.**
+**Use the pinned versions.** The Talos, Kubernetes and Cilium versions, the Image Factory schematic ID, the ISO URL and the installer image are pinned in [`metadata.env`](../../platform/talos/clusters/home-prod/metadata.env) ([ADR-009](../adr/009-pin-versions-and-image-factory-schematic.md)). Read them from there; do not pick a version here.
 
-The `metadata.env` file currently contains provisional version pins (v1.8.0 for Talos, v1.31.0 for Kubernetes). These are not authoritative until confirmed.
+- `talosctl` on the workstation must be the pinned release: the `Tag` line of `talosctl version --client` must equal `TALOS_VERSION`.
+- Download the ISO from `TALOS_ISO_URL` and use that same file for all three nodes. Image Factory builds it from `platform/talos/image/schematic.yaml`.
 
-**Version selection guidance:**
-- Prefer matching the Talos ISO version to the installed talosctl version
-- Check your talosctl version: `talosctl version`
-- Update `metadata.env` after the chosen version is confirmed
+The first time, run a, b and c. For each later USB drive (cp-02, cp-03, or a new drive), run a and c. The drive is written only if the file matches the recorded checksum.
+
+**a. Every time.** In a terminal at the repository root, read the pins, check `talosctl`, and name the ISO file after the Talos version and the schematic ID. The name keeps it apart from the stock `metal-amd64.iso` used for discovery. The second line prints the `Tag` line only if `talosctl` is the pinned release; if it prints nothing, stop and install that release. If `source` did not set the pins, the lines that use them fail with `run source first`: stop there.
 
 ```bash
-# Download Talos ISO (select version intentionally)
-# Example for v1.8.0 (NOT authoritative - select based on your talosctl version):
-# curl -LO https://github.com/siderolabs/talos/releases/download/v1.8.0/talos-amd64.iso
-
-# Example for v1.13.2 (matches talosctl v1.13.2):
-curl -LO https://github.com/siderolabs/talos/releases/download/v1.13.2/talos-amd64.iso
-
-# Create bootable USB (macOS - replace disk identifier)
-# WARNING: This will erase the target USB drive
-diskutil list
-diskutil unmountDisk /dev/disk2
-sudo dd if=talos-amd64.iso of=/dev/rdisk2 bs=1m
+source platform/talos/clusters/home-prod/metadata.env
+talosctl version --client | grep -E "Tag: +${TALOS_VERSION:?run source first}$"
+ISO="$HOME/Downloads/talos-${TALOS_VERSION:?run source first}-${TALOS_SCHEMATIC_ID:?run source first}.iso"
+echo "$ISO"
 ```
 
-**Do not proceed until:** Bootable USB is created and verified and Talos ISO version is recorded.
+**b. First time, or if the file is gone.** Download the ISO and print its SHA-256. If the download fails, `curl` exits with an error and no checksum is printed. The first time only, record the 64-character value in `docs/runbooks/cp-01-talos-bootstrap.md`: replace `not recorded yet` in block c with it, and commit that change to the repository. If block c reports `FAILED open or read`, it has written nothing. Right after recording, first check that the `ISO_SHA256` line holds just the 64 characters, with no space or other text; correcting that is not replacing the value. Otherwise the file is gone: run b again, then c, which checks the new download against the recorded value. Never replace a recorded value. If a new download does not match it (block c reports `FAILED`), stop: write nothing, record nothing, and raise it, because the image has changed.
+
+```bash
+curl -fL -o "$ISO" "${TALOS_ISO_URL:?run source first}" && shasum -a 256 "$ISO"
+```
+
+**c. Each USB drive.** Run `diskutil list` on its own and find the USB drive's header, `/dev/diskN (external, physical):`. Its row `0:` shows the drive's size and ends with the identifier to use, such as `disk4`: copy that, without `/dev/`, and not a `disk4s1` row. Copy the block below, put the identifier between the quotes on its first line, then run it; it erases that drive. The drive is unmounted and written only if `shasum` prints `OK` and then `diskutil list` prints that same header for `USB_DISK`, which a partition, an internal disk or a disk image does not; while no checksum is recorded, the check fails.
+
+```bash
+USB_DISK=""
+ISO_SHA256="not recorded yet"
+echo "$ISO_SHA256  $ISO" | shasum -a 256 -c &&
+diskutil list "/dev/${USB_DISK:?set it to the USB drive from diskutil list}" | grep -Fx "/dev/$USB_DISK (external, physical):" &&
+diskutil unmountDisk "/dev/$USB_DISK" &&
+sudo dd if="$ISO" of="/dev/r$USB_DISK" bs=1m
+```
+
+**Do not proceed until:** the ISO's SHA-256 is recorded in block c, and block c printed `OK` and wrote the USB drive.
 
 ### Step 4: Boot cp-01 from Talos ISO
 
@@ -360,7 +369,7 @@ kubectl get nodes
 - Store secrets/secrets.yaml and kubeconfig securely, not in Git
 - Do not commit generated machine configs to Git
 - MAC addresses are optional but useful for DHCP reservations
-- Version pins in metadata.env are provisional - verify compatibility before use
+- Versions are pinned in metadata.env - use those versions
 
 ---
 

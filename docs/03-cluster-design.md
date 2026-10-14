@@ -25,8 +25,7 @@ The control plane consists of 3 Talos Linux nodes:
 
 - **Node Count:** 3 (for etcd quorum)
 - **OS:** Talos Linux
-- **Kubernetes Version:** v1.31.0 (planned)
-- **Talos Version:** v1.8.0 (planned)
+- **Versions:** Talos, Kubernetes and Cilium, pinned in [`metadata.env`](../platform/talos/clusters/home-prod/metadata.env) ([ADR-009](adr/009-pin-versions-and-image-factory-schematic.md))
 - **CNI:** Cilium with kube-proxy replacement, to be installed as part of bootstrap ([ADR-005](adr/005-use-cilium-with-kube-proxy-replacement.md))
 - **Etcd:** Embedded in control plane nodes
 
