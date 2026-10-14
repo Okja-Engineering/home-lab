@@ -123,6 +123,9 @@ The block below writes `generated/cp-01.yaml` to `generated/cp-03.yaml` and `gen
   if test -L secrets; then
     echo "Stopping: secrets is a symbolic link. The plaintext is written only inside this directory." >&2
     exit 1
+  elif test -e secrets && ! test -d secrets; then
+    echo "Stopping: secrets is not a directory. The plaintext is written to secrets/secrets.yaml, so secrets must be a directory." >&2
+    exit 1
   elif test -L secrets/secrets.yaml; then
     echo "Stopping: secrets/secrets.yaml is a symbolic link. The plaintext is written only to a regular file inside this directory." >&2
     exit 1
