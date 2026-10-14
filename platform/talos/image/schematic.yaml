@@ -1,0 +1,8 @@
+# Image Factory schematic for home-prod: the boot ISO and the installer image are built from it (ADR-009).
+# intel-ucode only: discovery found an Intel CPU on all three control-plane machines.
+# Image Factory's ID for it (TALOS_SCHEMATIC_ID in platform/talos/clusters/home-prod/metadata.env)
+# is a hash of its content, comments excluded, so changing the extension list changes the ID.
+customization:
+  systemExtensions:
+    officialExtensions:
+      - siderolabs/intel-ucode
