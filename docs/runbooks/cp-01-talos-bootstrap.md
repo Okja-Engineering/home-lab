@@ -89,13 +89,14 @@ echo "$ISO"
 curl -fL -o "$ISO" "${TALOS_ISO_URL:?run source first}" && shasum -a 256 "$ISO"
 ```
 
-**c. Each USB drive.** Run `diskutil list` on its own and find the USB drive's header, `/dev/diskN (external, physical):`. Its row `0:` shows the drive's size and ends with the identifier to use, such as `disk4`: copy that, without `/dev/`, and not a `disk4s1` row. Copy the block below, put the identifier between the quotes on its first line, then run it; it erases that drive. Nothing is unmounted or written unless `USB_DISK` is set and `shasum` prints `OK`; while no checksum is recorded, the check fails.
+**c. Each USB drive.** Run `diskutil list` on its own and find the USB drive's header, `/dev/diskN (external, physical):`. Its row `0:` shows the drive's size and ends with the identifier to use, such as `disk4`: copy that, without `/dev/`, and not a `disk4s1` row. Copy the block below, put the identifier between the quotes on its first line, then run it; it erases that drive. The drive is unmounted and written only if `shasum` prints `OK` and then `diskutil list` prints that same header for `USB_DISK`, which a partition, an internal disk or a disk image does not; while no checksum is recorded, the check fails.
 
 ```bash
 USB_DISK=""
 ISO_SHA256="not recorded yet"
 echo "$ISO_SHA256  $ISO" | shasum -a 256 -c &&
-diskutil unmountDisk "/dev/${USB_DISK:?set it to the USB drive from diskutil list}" &&
+diskutil list "/dev/${USB_DISK:?set it to the USB drive from diskutil list}" | grep -Fx "/dev/$USB_DISK (external, physical):" &&
+diskutil unmountDisk "/dev/$USB_DISK" &&
 sudo dd if="$ISO" of="/dev/r$USB_DISK" bs=1m
 ```
 
