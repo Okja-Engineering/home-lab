@@ -51,6 +51,7 @@ The following are intentionally deferred until after the control plane is health
 - [Hardware Inventory](docs/01-hardware-inventory.md) - Control plane hardware specifications
 - [Network Plan](docs/02-network-plan.md) - Network topology and IP addressing
 - [Cluster Design](docs/03-cluster-design.md) - Architecture and scope boundaries
+- [Architecture Vision](docs/04-architecture-vision.md), [Workload Placement](docs/05-workload-placement.md) and [Recovery Expectations](docs/06-recovery-expectations.md) - Where the lab is going, where workloads run, and what must be recoverable
 - [Architecture Decision Records](docs/adr/README.md) - Architectural decision records
 - [Diagrams](diagrams/) - Physical and logical topology diagrams
   - [Physical Topology](diagrams/physical-topology.md) - Hardware layout and network connections
