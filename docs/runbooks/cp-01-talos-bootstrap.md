@@ -74,19 +74,19 @@ Configure the following settings:
 
 The first time, run a, b and c. For each later USB drive (cp-02, cp-03, or a new drive), run a and c. The drive is written only if the file matches the recorded checksum.
 
-**a. Every time.** In a terminal at the repository root, read the pins, check `talosctl`, and name the ISO file after them: the Talos version and the first 8 characters of the schematic ID. The name keeps it apart from the stock `metal-amd64.iso` used for discovery. The second line prints the `Tag` line only if `talosctl` is the pinned release; if it prints nothing, stop and install that release. If `source` did not set the pins, the second line fails with `TALOS_VERSION: run source first`: stop there.
+**a. Every time.** In a terminal at the repository root, read the pins, check `talosctl`, and name the ISO file after the Talos version and the schematic ID. The name keeps it apart from the stock `metal-amd64.iso` used for discovery. The second line prints the `Tag` line only if `talosctl` is the pinned release; if it prints nothing, stop and install that release. If `source` did not set the pins, the lines that use them fail with `run source first`: stop there.
 
 ```bash
 source platform/talos/clusters/home-prod/metadata.env
 talosctl version --client | grep -E "Tag: +${TALOS_VERSION:?run source first}$"
-ISO="$HOME/Downloads/talos-${TALOS_VERSION:?run source first}-${TALOS_SCHEMATIC_ID:0:8}-metal-amd64.iso"
+ISO="$HOME/Downloads/talos-${TALOS_VERSION:?run source first}-${TALOS_SCHEMATIC_ID:?run source first}.iso"
 echo "$ISO"
 ```
 
 **b. First time only.** Download the ISO and print its SHA-256. If the download fails, `curl` exits with an error and no checksum is printed. Record the 64-character value in this file, in place of `not recorded yet` in block c.
 
 ```bash
-curl -fL -o "$ISO" "$TALOS_ISO_URL" && shasum -a 256 "$ISO"
+curl -fL -o "$ISO" "${TALOS_ISO_URL:?run source first}" && shasum -a 256 "$ISO"
 ```
 
 **c. Each USB drive.** Run `diskutil list` on its own and find the USB drive: its line says `(external, physical)` and shows the drive's size. Copy the second block, put that drive's identifier (`disk` and a number) between the quotes on its first line, then run it; it erases that drive. Nothing is unmounted or written unless `USB_DISK` is set and `shasum` prints `OK`; while no checksum is recorded, the check fails.
