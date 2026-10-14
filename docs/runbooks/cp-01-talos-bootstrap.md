@@ -83,7 +83,7 @@ ISO="$HOME/Downloads/talos-${TALOS_VERSION:?run source first}-${TALOS_SCHEMATIC_
 echo "$ISO"
 ```
 
-**b. First time only.** Download the ISO and print its SHA-256. If the download fails, `curl` exits with an error and no checksum is printed. Record the 64-character value in this file, in place of `not recorded yet` in block c.
+**b. First time only.** Download the ISO and print its SHA-256. If the download fails, `curl` exits with an error and no checksum is printed. Record the 64-character value in `docs/runbooks/cp-01-talos-bootstrap.md`: replace `not recorded yet` in block c with it, and commit that change to the repository.
 
 ```bash
 curl -fL -o "$ISO" "${TALOS_ISO_URL:?run source first}" && shasum -a 256 "$ISO"
