@@ -19,7 +19,7 @@ The owner added the same day that the eventual goal includes public-facing servi
 Also decided by the owner on 2026-10-14:
 
 - The order of Phases 3 to 6 in [Goals](00-goals.md#phases). The GX10 joins after the workers, the platform services and GitOps.
-- The lab starts private. Public access comes later, as its own milestone with clear acceptance criteria. Its place in the sequence, Phase 7, is proposed, with its [prerequisites](00-goals.md#phases).
+- The lab starts private. Public access comes later, as its own milestone with clear acceptance criteria. Its place in the sequence, Phase 7, is proposed, with its [prerequisites](00-goals.md#phase-7-controlled-public-access).
 - Placement, storage selection and any erasure wait for evidence ([Order of Work](05-workload-placement.md#order-of-work)). Until then, the machines' roles are a [working plan](05-workload-placement.md#candidate-machines).
 - The [access and exposure](05-workload-placement.md#access-and-exposure-invariants) and [recovery](06-recovery-expectations.md#recovery-invariants) invariants marked as the owner's.
 - Local inference uses vLLM, not NVIDIA NIM ([ADR-015](adr/015-use-vllm-for-local-inference.md)). One GX10 is owned; a second, possibly bought with a collaborator, is possible future capacity.
@@ -38,7 +38,7 @@ The order of Phases 3 to 6 is the owner's; the reasons are this document's readi
 4. **Internal source control with GitOps, never the only way back,** as the owner requires ([Recovery Expectations](06-recovery-expectations.md#recovery-invariants)).
 5. **Local inference after GitOps.** The owner decided the GX10 can wait; by then it has DNS, TLS, monitoring and secrets handling to use.
 6. **Combined local and frontier workflows next,** because they need a working local endpoint.
-7. **Public access: position proposed.** Its prerequisites are in [Goals](00-goals.md#phases).
+7. **Public access: position proposed.** Its prerequisites are in [Goals](00-goals.md#phase-7-controlled-public-access).
 
 ## The Foundation (Phase 2)
 
