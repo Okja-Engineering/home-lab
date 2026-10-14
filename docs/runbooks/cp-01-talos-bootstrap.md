@@ -98,7 +98,7 @@ diskutil unmountDisk /dev/disk2
 echo "$ISO_SHA256  $ISO" | shasum -a 256 -c && sudo dd if="$ISO" of=/dev/rdisk2 bs=1m
 ```
 
-**Do not proceed until:** Bootable USB is created and verified and Talos ISO version is recorded.
+**Do not proceed until:** the ISO's SHA-256 is recorded in block c, and block c printed `OK` and wrote the USB drive.
 
 ### Step 4: Boot cp-01 from Talos ISO
 
