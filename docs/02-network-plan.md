@@ -65,13 +65,13 @@ Do not record MAC addresses in this repository. ADR-007 selects network ports wi
 
 - **Model:** Netgear GS308, 8-port gigabit, unmanaged
 - **Connection:** Plugged directly into a LAN port on the ISP-supplied gateway; cp-01, cp-02 and cp-03 are cabled to it
-- **Configuration:** None: it is unmanaged, so it has no VLANs and its ports are not mapped
+- **Configuration:** None: it is unmanaged, and its ports are not mapped
 - **Spare:** A TP-Link Omada switch, not in the network path ([Spare Switch](#spare-switch))
 
 ### Workstation
 
 - **Role:** Management workstation for cluster operations
-- **Network:** Connected to same 10.0.0.0/24 subnet
+- **Network:** Wi-Fi from the ISP-supplied gateway, on the same 10.0.0.0/24 subnet as the nodes
 - **Access:** talosctl to the nodes, not SSH ([ADR-001](adr/001-use-talos-linux.md)); kubectl access via kubeconfig
 
 ## Network Topology

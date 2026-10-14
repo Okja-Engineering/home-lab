@@ -2,9 +2,17 @@
 
 ## Legend
 
-- **Solid lines:** Current / confirmed
-- **Dashed lines:** Near-term control-plane target
-- **Gray, dotted lines:** Future / deferred
+Boxes:
+
+- **Green:** In place now
+- **Blue, dashed border:** Control-plane target, not built yet
+- **Gray, dotted border:** Future / deferred
+
+Lines:
+
+- **Solid:** A cable
+- **Long dashes, labelled Wi-Fi:** A Wi-Fi link
+- **Dotted:** A future connection
 
 ## Current Physical Layout
 
@@ -12,33 +20,38 @@
 graph TB
     Internet[Internet]
     Router[Router<br/>10.0.0.1<br/>Gateway/DHCP]
-    Workstation[Workstation<br/>macOS<br/>talosctl/kubectl]
     Switch[Netgear GS308 Switch<br/>8-port gigabit<br/>Unmanaged]
+    Workstation[Workstation<br/>macOS<br/>talosctl/kubectl]
     cp01[cp-01<br/>10.0.0.21<br/>GMKtec mini PC<br/>Control-plane target]
     cp02[cp-02<br/>10.0.0.22<br/>GMKtec mini PC<br/>Control-plane target]
     cp03[cp-03<br/>10.0.0.23<br/>GMKtec mini PC<br/>Control-plane target]
+    FutureSwitching[Switching for later nodes<br/>Not chosen yet<br/>Deferred]
     FutureWorkers[Future Workers<br/>Stateful/Platform/GPU<br/>Deferred]
     FutureNAS[Future NAS<br/>Storage<br/>Deferred]
 
-    Internet --> Router
-    Router --> Workstation
-    Router --> Switch
-    Switch --> cp01
-    Switch --> cp02
-    Switch --> cp03
-    Switch -.-> FutureWorkers
-    Switch -.-> FutureNAS
+    Internet --- Router
+    Router --- Switch
+    Router ---|Wi-Fi| Workstation
+    Switch --- cp01
+    Switch --- cp02
+    Switch --- cp03
+    Router -.- FutureSwitching
+    FutureSwitching -.- FutureWorkers
+    FutureSwitching -.- FutureNAS
 
-    classDef current fill:#90EE90,stroke:#228B22,stroke-width:2px
-    classDef target fill:#87CEEB,stroke:#4682B4,stroke-width:2px,stroke-dasharray: 5 5
-    classDef future fill:#D3D3D3,stroke:#808080,stroke-width:2px,stroke-dasharray: 2 2
+    %% Links are numbered from 0 in the order written above: link 2 is the Wi-Fi link
+    linkStyle 2 stroke-dasharray: 10 5,stroke-width:2px
 
-    class Internet,Router,Workstation,Switch current
+    classDef current fill:#90EE90,stroke:#228B22,stroke-width:2px,color:#000
+    classDef target fill:#87CEEB,stroke:#4682B4,stroke-width:2px,stroke-dasharray: 5 5,color:#000
+    classDef future fill:#D3D3D3,stroke:#808080,stroke-width:2px,stroke-dasharray: 2 2,color:#000
+
+    class Internet,Router,Switch,Workstation current
     class cp01,cp02,cp03 target
-    class FutureWorkers,FutureNAS future
+    class FutureSwitching,FutureWorkers,FutureNAS future
 ```
 
-**Network:** Flat 10.0.0.0/24 (no VLANs: the GS308 is unmanaged)
+**Network:** Flat 10.0.0.0/24 (no VLANs; [ADR-002](../docs/adr/002-start-with-flat-network.md))
 
 ## Components
 
@@ -89,13 +102,11 @@ graph TB
 
 ### Future Connections
 
-- Switch ↔ Worker nodes
-- Switch ↔ NAS
-- Switch ↔ GPU worker
+- Worker nodes, the NAS and the GPU worker: the switching they connect through is not chosen yet (see [Notes](#notes))
 
 ## Port Mapping
 
-The GS308 is unmanaged, so its ports are not mapped.
+The GS308 is unmanaged, and its ports are not mapped.
 
 ## Notes
 

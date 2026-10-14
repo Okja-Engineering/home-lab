@@ -46,9 +46,9 @@ graph TB
     Platform -.-> Apps
     apiserver -.-> Workers
 
-    classDef target fill:#87CEEB,stroke:#4682B4,stroke-width:2px
-    classDef planned fill:#FFD700,stroke:#DAA520,stroke-width:2px,stroke-dasharray: 5 5
-    classDef future fill:#D3D3D3,stroke:#808080,stroke-width:2px,stroke-dasharray: 2 2
+    classDef target fill:#87CEEB,stroke:#4682B4,stroke-width:2px,color:#000
+    classDef planned fill:#FFD700,stroke:#DAA520,stroke-width:2px,stroke-dasharray: 5 5,color:#000
+    classDef future fill:#D3D3D3,stroke:#808080,stroke-width:2px,stroke-dasharray: 2 2,color:#000
 
     class Workstation,VIP,cp01,cp02,cp03,etcd,k8s,apiserver,scheduler,controller,Cilium target
     class Flux,Platform,Apps planned
