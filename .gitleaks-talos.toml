@@ -1,4 +1,5 @@
-# Talos rules for gitleaks: the secrets that talosctl and kubectl write.
+# Talos rules for gitleaks: the secrets that talosctl and kubectl write, and
+# age identities, which open the SOPS-encrypted Talos secrets bundle.
 #
 # One of the two rule sets that scripts/secret-scan.sh applies, for the
 # pre-commit hook and for the CI scan alike. The other is .gitleaks.toml,
@@ -62,6 +63,19 @@ regex = '''(?m)(?:^|[^\w./\n-])([a-z0-9]{6}\.[a-z0-9]{16})(?:[^\w./-]|$)'''
 id = "talos-base64-secret"
 description = "32 random bytes in base64 as the value of a field (Talos cluster or encryption secret)"
 regex = ''':[ \t]+["']?([A-Za-z0-9+/]{43}=)(?:[^A-Za-z0-9+/=]|$)'''
+
+# An age identity, the private half of an age key pair, in any file. age
+# writes a native identity as AGE-SECRET-KEY- then "1" and the key in
+# Bech32, and a post-quantum one (age 1.3 and later) with PQ- before the
+# "1". An age plugin writes its identities as AGE-PLUGIN-, the plugin's
+# name, then "-1" and its data. gitleaks' default rule for age keys matches
+# only the first form, and not on the paths the default allowlist exempts.
+# Public keys, such as the recipient in .sops.yaml, are lower case and do
+# not match.
+[[rules]]
+id = "age-identity-any-path"
+description = "age identity (native, post-quantum or plugin) in any file"
+regex = '''(AGE-SECRET-KEY-(?:PQ-)?1[02-9AC-HJ-NP-Z]{58}|AGE-PLUGIN-[A-Z0-9-]+-1[02-9AC-HJ-NP-Z]+)'''
 
 # The file names talosctl gives its output by default, plus kubeconfig.
 # .gitignore ignores them; this catches one that was committed anyway, for
