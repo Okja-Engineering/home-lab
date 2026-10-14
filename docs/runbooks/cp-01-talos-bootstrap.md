@@ -89,7 +89,7 @@ echo "$ISO"
 curl -fL -o "$ISO" "${TALOS_ISO_URL:?run source first}" && shasum -a 256 "$ISO"
 ```
 
-**c. Each USB drive.** Run `diskutil list` on its own and find the USB drive: its line says `(external, physical)` and shows the drive's size. Copy the block below, put that drive's identifier (`disk` and a number) between the quotes on its first line, then run it; it erases that drive. Nothing is unmounted or written unless `USB_DISK` is set and `shasum` prints `OK`; while no checksum is recorded, the check fails.
+**c. Each USB drive.** Run `diskutil list` on its own and find the USB drive's header, `/dev/diskN (external, physical):`. Its row `0:` shows the drive's size and ends with the identifier to use, such as `disk4`: copy that, without `/dev/`, and not a `disk4s1` row. Copy the block below, put the identifier between the quotes on its first line, then run it; it erases that drive. Nothing is unmounted or written unless `USB_DISK` is set and `shasum` prints `OK`; while no checksum is recorded, the check fails.
 
 ```bash
 USB_DISK=""
