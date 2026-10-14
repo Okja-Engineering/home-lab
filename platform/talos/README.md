@@ -15,6 +15,7 @@ platform/talos/
         ├── secrets/
         ├── generated/
         ├── patches/
+        ├── nodes/
         └── manifests/
 ```
 
@@ -25,6 +26,7 @@ platform/talos/
 - `secrets/`: Talos secrets bundle and sensitive outputs - never committed
 - `generated/`: Machine configs generated from templates and patches - usually not committed
 - `patches/`: YAML patches for machine configuration - committed to Git
+- `nodes/`: One patch per node (its hostname, port alias and static address) - committed to Git
 - `manifests/`: Kubernetes manifests for cluster bootstrap - committed to Git
 
 ## Workflow
