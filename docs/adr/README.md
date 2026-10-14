@@ -57,6 +57,7 @@ A hardware fact is **discovered** (read from the machine with a tool, and dated)
 | 013 | Define Management Access Boundaries Now; Enforce with the Talos Firewall Later | Accepted | Define allowed management sources now and enforce them with the Talos firewall later |
 | 014 | Re-base the Address Plan onto 10.0.0.0/24 | Accepted | Move the planned addresses onto 10.0.0.0/24, the home network's subnet, keeping the host numbers and the design |
 | 015 | Use vLLM for Local Inference | Accepted | Serve Phase 5 models with vLLM; the GX10's operating system, deployment path and models stay open |
+| 016 | Use IPv4-Only Pod and Service Networking Initially | Accepted | Keep pod and Service networks IPv4-only for the bootstrap; serve future public IPv6 from a proxy or gateway in front of the cluster |
 
 ## Open Decisions
 
@@ -87,7 +88,7 @@ Choices the destination needs that have not been made. Where a document proposes
 | Phase 6 success measure | Quality, latency, cost, privacy, or a mix in a stated order | Milestone 8 |
 | Domain | A domain we control, its spelling and ownership confirmed before any use; publishing a hostname follows the [publication rules](../05-workload-placement.md#publication-rules) | Public hostnames (Milestone 9); possibly issue 30's TLS |
 | Public API gateway and accounts | Extend the model gateway with identity, per-user credentials, usage limits and metering (proposed); an account system, such as a portal with Google login; how credentials are issued and revoked | Milestone 9 |
-| How public traffic reaches the lab | A static public IP (possible, not required), or not; a separate public Gateway with its own address; how public IPv6 is served | Milestone 9 |
+| How public traffic reaches the lab | A static public IP (possible, not required), or not; a separate public Gateway with its own address; the proxy or gateway that serves public IPv6 ([ADR-016](016-use-ipv4-only-pod-and-service-networking-initially.md)) | Milestone 9 |
 
 ## Instructions
 
