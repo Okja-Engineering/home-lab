@@ -72,24 +72,31 @@ Configure the following settings:
 - `talosctl` on the workstation must be the pinned release: the `Tag` line of `talosctl version --client` must equal `TALOS_VERSION`.
 - Download the ISO from `TALOS_ISO_URL` once and use that same file for all three nodes. Image Factory builds it from `platform/talos/image/schematic.yaml`.
 
+The first time, run a, b and c. For each later USB drive (cp-02, cp-03, or a new drive), run a and c. The drive is written only if the file matches the recorded checksum.
+
+**a. Every time.** In a terminal at the repository root, read the pins and name the ISO file after them: the Talos version and the first 8 characters of the schematic ID. The name keeps it apart from the stock `metal-amd64.iso` used for discovery. If `source` did not set the pins, the third line fails with `TALOS_VERSION: run source first`: stop there.
+
 ```bash
-# From the repository root
 source platform/talos/clusters/home-prod/metadata.env
-echo "$TALOS_VERSION"
 talosctl version --client
-
-# Download the ISO once, outside the repository, and take its checksum
-curl -fL -o "$HOME/Downloads/metal-amd64.iso" "$TALOS_ISO_URL"
-shasum -a 256 "$HOME/Downloads/metal-amd64.iso"
-
-# Create bootable USB (macOS - replace disk identifier)
-# WARNING: This will erase the target USB drive
-diskutil list
-diskutil unmountDisk /dev/disk2
-sudo dd if="$HOME/Downloads/metal-amd64.iso" of=/dev/rdisk2 bs=1m
+ISO="$HOME/Downloads/talos-${TALOS_VERSION:?run source first}-${TALOS_SCHEMATIC_ID:0:8}-metal-amd64.iso"
+echo "$ISO"
 ```
 
-**ISO SHA-256:** not recorded yet. To be recorded here by the owner: the value `shasum -a 256` printed for the first download above. Before writing the file to a USB drive for any node, check that `shasum -a 256` gives this value.
+**b. First time only.** Download the ISO and print its SHA-256. If the download fails, `curl` exits with an error and no checksum is printed. Record the 64-character value in this file, in place of `not recorded yet` in block c.
+
+```bash
+curl -fL -o "$ISO" "$TALOS_ISO_URL" && shasum -a 256 "$ISO"
+```
+
+**c. Each USB drive.** Check the file against the recorded SHA-256, then write the drive (macOS; this erases it). Replace `disk2` with the USB drive shown by `diskutil list`. `dd` runs only if `shasum` prints `OK`; while no checksum is recorded, the check fails.
+
+```bash
+ISO_SHA256="not recorded yet"
+diskutil list
+diskutil unmountDisk /dev/disk2
+echo "$ISO_SHA256  $ISO" | shasum -a 256 -c && sudo dd if="$ISO" of=/dev/rdisk2 bs=1m
+```
 
 **Do not proceed until:** Bootable USB is created and verified and Talos ISO version is recorded.
 
