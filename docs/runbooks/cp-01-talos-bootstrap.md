@@ -83,17 +83,17 @@ ISO="$HOME/Downloads/talos-${TALOS_VERSION:?run source first}-${TALOS_SCHEMATIC_
 echo "$ISO"
 ```
 
-**b. First time, or if the file is gone.** Download the ISO and print its SHA-256. If the download fails, `curl` exits with an error and no checksum is printed. The first time only, record the 64-character value in `docs/runbooks/cp-01-talos-bootstrap.md`: replace `not recorded yet` in block c with it, and commit that change to the repository. If block c reports `FAILED open or read`, it has written nothing. Right after recording, first check that the `ISO_SHA256` line holds just the 64 characters, with no space or other text; correcting that is not replacing the value. Otherwise the file is gone: run b again, then c, which checks the new download against the recorded value. Never replace a recorded value. If a new download does not match it (block c reports `FAILED`), stop: write nothing, record nothing, and raise it, because the image has changed.
+**b. First time, or if the file is gone.** Download the ISO and print its SHA-256. If the download fails, `curl` exits with an error and no checksum is printed. Only if block c says `not recorded yet`, record the 64-character value in `docs/runbooks/cp-01-talos-bootstrap.md`: replace `not recorded yet` with it, and commit that change to the repository. If block c reports `FAILED open or read`, it has written nothing. Right after recording, first check that the `ISO_SHA256` line holds just the 64 characters, with no space or other text; correcting that is not replacing the value. Otherwise the file is gone: run b again, then c, which checks the new download against the recorded value. Never replace a recorded value. If a new download does not match it (block c reports `FAILED`), stop: write nothing, record nothing, and raise it, because the image has changed.
 
 ```bash
 curl -fL -o "$ISO" "${TALOS_ISO_URL:?run source first}" && shasum -a 256 "$ISO"
 ```
 
-**c. Each USB drive.** Run `diskutil list` on its own and find the USB drive's header, `/dev/diskN (external, physical):`. Its row `0:` shows the drive's size and ends with the identifier to use, such as `disk4`: copy that, without `/dev/`, and not a `disk4s1` row. Copy the block below, put the identifier between the quotes on its first line, then run it; it erases that drive. The drive is unmounted and written only if `shasum` prints `OK` and then `diskutil list` prints that same header for `USB_DISK`, which a partition, an internal disk or a disk image does not; while no checksum is recorded, the check fails.
+**c. Each USB drive.** Run `diskutil list` on its own and find the USB drive's header, `/dev/diskN (external, physical):`. Its row `0:` shows the drive's size and ends with the identifier to use, such as `disk4`: copy that, without `/dev/`, and not a `disk4s1` row. Copy the block below, put the identifier between the quotes on its first line, then run it; it erases that drive. The drive is unmounted and written only if `shasum` prints `OK` and then `diskutil list` prints that same header for `USB_DISK`, which a partition, an internal disk or a disk image does not.
 
 ```bash
 USB_DISK=""
-ISO_SHA256="not recorded yet"
+ISO_SHA256="ab6396a1680964412e71dd9e97d449044c6ae8986104558dba4b7d8391a481fb"
 echo "$ISO_SHA256  $ISO" | shasum -a 256 -c &&
 diskutil list "/dev/${USB_DISK:?set it to the USB drive from diskutil list}" | grep -Fx "/dev/$USB_DISK (external, physical):" &&
 diskutil unmountDisk "/dev/$USB_DISK" &&
