@@ -23,6 +23,7 @@ Also decided by the owner on 2026-10-14:
 - Placement, storage selection and any erasure wait for evidence ([Order of Work](05-workload-placement.md#order-of-work)). Until then, the machines' roles are a [working plan](05-workload-placement.md#candidate-machines).
 - The [access and exposure](05-workload-placement.md#access-and-exposure-invariants) and [recovery](06-recovery-expectations.md#recovery-invariants) invariants marked as the owner's.
 - Local inference uses vLLM, not NVIDIA NIM ([ADR-015](adr/015-use-vllm-for-local-inference.md)). One GX10 is owned; a second, possibly bought with a collaborator, is possible future capacity.
+- Pod and Service networking is IPv4-only initially, with future public IPv6 handled at a proxy or gateway in front of the private cluster ([ADR-016](adr/016-use-ipv4-only-pod-and-service-networking-initially.md)).
 - The AI work is learning and testing, initially; what that means for each service is in [Recovery Expectations](06-recovery-expectations.md#two-bars).
 
 The decisions and their summary rationale are in [ADR-001](adr/001-use-talos-linux.md) to [ADR-014](adr/014-rebase-address-plan-onto-10-0-0-0-24.md), which stand. The fuller researched reasoning is in the earlier "Review RFC Decisions" work, cited when it is recovered. The reference home labs from the owner's earlier ChatGPT Home Lab project research are not yet recovered either; no names are guessed.
@@ -41,10 +42,10 @@ The order of Phases 3 to 6 is the owner's; the reasons are this document's readi
 
 ## The Foundation (Phase 2)
 
-The foundation is accepted in ADR-001 to ADR-014. What it gives the later phases:
+The foundation is accepted in ADR-001 to ADR-014 and ADR-016. What it gives the later phases:
 
 - **Talos on three control-plane nodes** ([ADR-001](adr/001-use-talos-linux.md), [ADR-003](adr/003-use-three-control-plane-nodes.md)), with **workloads allowed on them** under requests, limits and headroom ([ADR-008](adr/008-allow-workloads-on-control-plane-nodes.md)). The safeguards are [proposed](05-workload-placement.md#interim-control-plane-policy).
-- **Cilium with kube-proxy replacement from the first boot** ([ADR-005](adr/005-use-cilium-with-kube-proxy-replacement.md)), which Cilium's Gateway API needs to serve application entry points later ([ADR-012](adr/012-use-cilium-gateway-api-for-ingress.md)).
+- **Cilium with kube-proxy replacement from the first boot** ([ADR-005](adr/005-use-cilium-with-kube-proxy-replacement.md)), which Cilium's Gateway API needs to serve application entry points later ([ADR-012](adr/012-use-cilium-gateway-api-for-ingress.md)). Pod and Service networks are IPv4-only at first ([ADR-016](adr/016-use-ipv4-only-pod-and-service-networking-initially.md)).
 - **A shared API VIP** ([ADR-006](adr/006-use-talos-vip-for-kubernetes-api-endpoint.md)) keeps one API address when a control-plane node is lost. `talosctl` talks to each node at its own address, so `talosctl` access does not depend on the VIP.
 - **Static addresses and a reserved worker range** ([ADR-007](adr/007-configure-static-node-addresses.md), [ADR-014](adr/014-rebase-address-plan-onto-10-0-0-0-24.md)) let workers join without renumbering.
 - **Exact pins and one Image Factory schematic** ([ADR-009](adr/009-pin-versions-and-image-factory-schematic.md)) make nodes reproducible. [Image profiles](05-workload-placement.md#image-profiles) are proposed for hardware that needs more.
