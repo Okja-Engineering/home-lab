@@ -17,7 +17,7 @@ Talos Linux cluster configuration for home production environment.
 
 ## Configuration
 
-- **Metadata**: `metadata.env` records every value the machine configs use. The patches are plain YAML and `talosctl` substitutes nothing, so a value changed in `metadata.env` must also be changed in the patch that copies it. Each patch's comments name the keys it copies.
+- **Metadata**: `metadata.env` is the record of the cluster's values. The patches are plain YAML and `talosctl` substitutes nothing, so they hold copies: a value changed in `metadata.env` must also be changed in the patch that copies it. Each patch's comments name the keys it copies.
 - **Patches**: Talos v1.14 configuration documents, applied by the block in [Generating the machine configs](#generating-the-machine-configs):
   - `patches/all-nodes.yaml`, for every node: the install disk and installer image, the time servers (with NTS), the name servers, and the pod and Service subnets;
   - `patches/control-plane.yaml`, for the control-plane nodes: no default CNI, no kube-proxy, workloads allowed on control-plane nodes, and the VIP;
@@ -176,6 +176,6 @@ The patches are ready to generate configs from, within these limits:
 
 - Talos discovery is done on all three machines, and what it found is in `metadata.env`. The versions are pinned there too ([ADR-009](../../../../docs/adr/009-pin-versions-and-image-factory-schematic.md)).
 - The block validates each node's config with `talosctl validate --mode metal --strict`, and stops unless `talosctl` reports the `TALOS_VERSION` that `metadata.env` pins.
-- **Stop point:** don't generate configs from the cluster's real secrets until the stop point in the [repository README](../../../../README.md#current-status) allows it.
+- **Stop point:** the [repository README](../../../../README.md#current-status) says when configs may be generated from the cluster's real secrets. Until then, run the block only in a scratch clone with a throwaway bundle.
 - **The install erases the selected disk, whatever `provisioning.wipe` says.** The generated config's `wipe: false` does not keep the disk's contents.
 - Validation can't show what only the machines can: that the alias `lan0` matches the live port, that the static address and the VIP come up on it, which node holds the VIP, the live disk list, NTS time sync over the network, and Cilium. [Issue 22](https://github.com/Okja-Engineering/home-lab/issues/22) (install day) and [issue 26](https://github.com/Okja-Engineering/home-lab/issues/26) check them on the machines.
