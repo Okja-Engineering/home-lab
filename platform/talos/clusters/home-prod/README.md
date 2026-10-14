@@ -85,7 +85,7 @@ See [docs/runbooks/three-node-control-plane-bootstrap.md](../../../../docs/runbo
 - Regenerate machine configs after modifying `metadata.env` or patches
 - MAC addresses are documented locally for DHCP reservations, not committed to Git
 - Network interface names must be confirmed via Talos before config generation
-- Version pins are provisional - verify Talos/Kubernetes compatibility before use
+- Versions are pinned in `metadata.env` - use those versions
 
 ## Patch Readiness Warning
 

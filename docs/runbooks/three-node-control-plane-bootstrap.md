@@ -435,7 +435,7 @@ This runbook is complete when:
 - Store secrets/secrets.yaml and kubeconfig securely, not in Git
 - Do not commit generated machine configs to Git
 - MAC addresses are optional but useful for DHCP reservations
-- Version pins in metadata.env are provisional - verify compatibility before use
+- Versions are pinned in metadata.env - use those versions
 
 ---
 
