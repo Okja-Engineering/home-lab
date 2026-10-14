@@ -39,12 +39,12 @@ The nodes will not use DHCP reservations. Each node's address will be set in its
 
 ### Router Check
 
-The planned addresses are in [`metadata.env`](../platform/talos/clusters/home-prod/metadata.env): `CLUSTER_VIP`, `CP_01_IP` to `CP_03_IP`, `WORKER_RANGE` and `LB_POOL`. What has been checked against the ISP-supplied gateway so far:
+The planned addresses are in [`metadata.env`](../platform/talos/clusters/home-prod/metadata.env): `CLUSTER_VIP`, `CP_01_IP` to `CP_03_IP`, `WORKER_RANGE` and `LB_POOL`. What has been checked so far, on the ISP-supplied gateway and from the workstation:
 
 - On 2026-10-13 the gateway's DHCP pool was set to `DHCP_POOL` and the saved values were read back. Every planned address is outside it.
 - On 2026-10-13 a ping and ARP check from the workstation got no reply from any of the twenty planned addresses. A silent ping is not proof: a device that is asleep or switched off does not reply.
 
-Still to check ([issue 16](https://github.com/Okja-Engineering/home-lab/issues/16)): the gateway's device list, online and offline, its leases and its reservations; then the ping and ARP check and the leases again, after any old lease could have expired.
+Still to check before Talos installation ([issue 16](https://github.com/Okja-Engineering/home-lab/issues/16)): the gateway's device list, online and offline, its leases and its reservations; then the ping and ARP check and the leases again, after any old lease could have expired (the gateway's lease time is two days; [ADR-014](adr/014-rebase-address-plan-onto-10-0-0-0-24.md)).
 
 Later checks:
 

@@ -18,7 +18,7 @@ Control plane IP addresses are planned static addresses ([ADR-007](adr/007-confi
 - **cp-02:** 10.0.0.22
 - **cp-03:** 10.0.0.23
 
-Each address will be set in the node's Talos machine config, not reserved in DHCP. The router check to do before Talos installation is in the [Network Plan](02-network-plan.md#node-addressing).
+Each address will be set in the node's Talos machine config, not reserved in DHCP.
 
 ## Hardware Details to Collect
 
