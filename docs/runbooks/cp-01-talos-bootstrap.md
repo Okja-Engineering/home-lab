@@ -67,29 +67,29 @@ Configure the following settings:
 
 ### Step 3: Create Talos Bootable USB
 
-**Select Talos ISO version intentionally before flashing USB.**
+**Use the pinned versions.** The Talos, Kubernetes and Cilium versions, the Image Factory schematic ID, the ISO URL and the installer image are pinned in [`metadata.env`](../../platform/talos/clusters/home-prod/metadata.env) ([ADR-009](../adr/009-pin-versions-and-image-factory-schematic.md)). Read them from there; do not pick a version here.
 
-The `metadata.env` file currently contains provisional version pins (v1.8.0 for Talos, v1.31.0 for Kubernetes). These are not authoritative until confirmed.
-
-**Version selection guidance:**
-- Prefer matching the Talos ISO version to the installed talosctl version
-- Check your talosctl version: `talosctl version`
-- Update `metadata.env` after the chosen version is confirmed
+- `talosctl` on the workstation must be the pinned release: the `Tag` line of `talosctl version --client` must equal `TALOS_VERSION`.
+- Download the ISO from `TALOS_ISO_URL` once and use that same file for all three nodes. Image Factory builds it from `platform/talos/image/schematic.yaml`.
 
 ```bash
-# Download Talos ISO (select version intentionally)
-# Example for v1.8.0 (NOT authoritative - select based on your talosctl version):
-# curl -LO https://github.com/siderolabs/talos/releases/download/v1.8.0/talos-amd64.iso
+# From the repository root
+source platform/talos/clusters/home-prod/metadata.env
+echo "$TALOS_VERSION"
+talosctl version --client
 
-# Example for v1.13.2 (matches talosctl v1.13.2):
-curl -LO https://github.com/siderolabs/talos/releases/download/v1.13.2/talos-amd64.iso
+# Download the ISO once, outside the repository, and take its checksum
+curl -fL -o "$HOME/Downloads/metal-amd64.iso" "$TALOS_ISO_URL"
+shasum -a 256 "$HOME/Downloads/metal-amd64.iso"
 
 # Create bootable USB (macOS - replace disk identifier)
 # WARNING: This will erase the target USB drive
 diskutil list
 diskutil unmountDisk /dev/disk2
-sudo dd if=talos-amd64.iso of=/dev/rdisk2 bs=1m
+sudo dd if="$HOME/Downloads/metal-amd64.iso" of=/dev/rdisk2 bs=1m
 ```
+
+**ISO SHA-256:** not recorded yet. To be recorded here by the owner: the value `shasum -a 256` printed for the first download above. Before writing the file to a USB drive for any node, check that `shasum -a 256` gives this value.
 
 **Do not proceed until:** Bootable USB is created and verified and Talos ISO version is recorded.
 
