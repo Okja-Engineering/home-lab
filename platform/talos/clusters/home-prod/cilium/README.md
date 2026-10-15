@@ -23,7 +23,7 @@ These steps live here until [issue 22](https://github.com/Okja-Engineering/home-
 - **Tools.** On the workstation, as well as `talosctl` and `kubectl`: `brew install helm cilium-cli`.
 - **When.** Install Cilium on cp-01 straight after `talosctl bootstrap` and fetching the kubeconfig, as the Talos guide does. The guide also warns of a wait at boot phase 18/19 (`retrying error: node not ready`) with a 10-minute window. Talos v1.14.2 has no such wait: its boot sequence ends once Talos's own services have started, and no step in it waits for the node to be Ready ([`v1alpha1_sequencer.go`](https://github.com/siderolabs/talos/blob/v1.14.2/internal/app/machined/pkg/runtime/v1alpha1/v1alpha1_sequencer.go#L214-L254)). So there is no deadline.
 - **Expected until Cilium runs:** every node reports `NotReady`, and CoreDNS stays `Pending`.
-- **The kubeconfig.** `KUBECONFIG` must name the one kubeconfig file fetched after bootstrap, by its full path, and that file's current context must point at `CLUSTER_ENDPOINT` from `metadata.env`. Both steps stop otherwise. They export `KUBECONFIG` after checking it, so helm, kubectl and cilium all use that file, even if it wasn't exported.
+- **The kubeconfig.** `KUBECONFIG` must name the one kubeconfig file fetched after bootstrap, by its full path, and that file's current context must point at `CLUSTER_ENDPOINT` from `metadata.env`. Both steps stop otherwise. They export `KUBECONFIG` after checking it, and helm, kubectl and cilium all read that exported value, in the same way, even if it wasn't exported before.
 - **Not `talosctl health`.** With Talos's default CNI disabled, `talosctl health` skips its node-Ready and CoreDNS checks, so a pass says nothing about Cilium. It checks etcd, the control-plane pods, apid and the kubelet, and can follow. Cilium's readiness is checked in two stages, below.
 
 ## Install Cilium on cp-01
@@ -74,7 +74,7 @@ Paste this from anywhere inside the repository. It installs only committed files
     echo "Stopping: the downloaded chart does not match CILIUM_CHART_SHA256. Nothing was installed." >&2
     exit 1
   fi
-  helm install cilium "$t/cilium-$CILIUM_VERSION.tgz" --kubeconfig "$KUBECONFIG" --kube-context "$ctx" \
+  helm install cilium "$t/cilium-$CILIUM_VERSION.tgz" --kube-context "$ctx" \
     --namespace kube-system -f "$t/cilium/values.yaml"
   rm -rf "$t"
   kubectl --context "$ctx" -n kube-system rollout status daemonset/cilium --timeout=10m
@@ -88,7 +88,7 @@ Paste this from anywhere inside the repository. It installs only committed files
 
 Done means the agent and Envoy have rolled out, the operator is available, and cp-01 is `Ready`. Of the operator's two replicas, one stays `Pending` until a second node joins: the two must run on different nodes. One running replica is enough for the operator to count as available, but not for `cilium status`, which is why that check waits for the next step.
 
-- **Pasting it again** stops at `helm install` with "cannot reuse a name that is still in use", by design. That means a release named `cilium` exists, not that it deployed: helm 4 gives the same error after an install that failed or was interrupted. `helm status cilium --namespace kube-system --kubeconfig "$KUBECONFIG"` shows its status, which is `deployed` once an install has finished.
+- **Pasting it again** stops at `helm install` with "cannot reuse a name that is still in use", by design. That means a release named `cilium` exists, not that it deployed: helm 4 gives the same error after an install that failed or was interrupted. `KUBECONFIG="$KUBECONFIG" helm status cilium --namespace kube-system` shows its status, which is `deployed` once an install has finished.
 - **A run that stops partway** can leave a `tmp.*` directory in the per-user temporary folder (`getconf DARWIN_USER_TEMP_DIR`). It holds copies of the committed `metadata.env` and `values.yaml`, and perhaps the public chart. Nothing in it is secret, and it can be deleted.
 
 ## Check Readiness After cp-02 and cp-03 Join
