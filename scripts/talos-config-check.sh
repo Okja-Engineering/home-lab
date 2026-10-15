@@ -30,7 +30,8 @@
 #
 # Needs bash 5 or later, git, talosctl at metadata.env's TALOS_VERSION, sops, age-keygen, yq (v4),
 # python3, tar, awk, cmp and sha256sum. Exit status: 0 when every check passed, 1 when one failed,
-# 2 when bash is older than 5, a tool is missing, or talosctl is not TALOS_VERSION.
+# 2 when bash is older than 5, a tool is missing, talosctl is not TALOS_VERSION, or the script is
+# run from a stream rather than by its path.
 test "${BASH_VERSINFO[0]:-0}" -ge 5 || { echo "talos-config-check: needs bash 5 or later" >&2; exit 2; }
 set -euo pipefail
 
@@ -42,10 +43,16 @@ me=talos-config-check
 # hooks and which would point the copy's git at the caller's repository; not SOPS_*, which would
 # steer sops; and the new bash gets no HOME, BASH_ENV or exported function. The new bash sources
 # the file this shell opened (BASH_SOURCE), made absolute, so that no PATH lookup can bring in
-# another copy. Handing over here, before anything is defined, means that a run can't end without
-# main: a run found on PATH, or a truncated copy of this file, fails instead of passing unchecked.
+# another copy; a stream (bash <(...), /dev/stdin, /dev/fd/N, a FIFO) can't be read again whole,
+# so it is refused. Handing over here, before anything is defined, means that a run can't end
+# without main: a run found on PATH, or a copy cut after this point, fails instead of passing
+# unchecked. main sets strict mode itself, whatever the shell that sources this file has set.
 if ! (return 0 2> /dev/null); then
   case "${BASH_SOURCE[0]}" in /*) self="${BASH_SOURCE[0]}" ;; *) self="$PWD/${BASH_SOURCE[0]}" ;; esac
+  if case "$self" in /dev/* | /proc/*) true ;; *) ! test -f "$self" ;; esac; then
+    echo "$me: run this script by its path: $self is not a regular file that can be read again" >&2
+    exit 2
+  fi
   exec env -i PATH="$PATH" ${TMPDIR:+"TMPDIR=$TMPDIR"} ${RUNNER_TEMP:+"RUNNER_TEMP=$RUNNER_TEMP"} \
     "$BASH" -c 'source "$1"; main' "$me" "$self"
 fi
@@ -769,6 +776,7 @@ check_refusals() {
 }
 
 main() {
+  set -euo pipefail
   prepare
   make_copy
   find_blocks

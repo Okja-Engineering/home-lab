@@ -16,7 +16,8 @@
 #
 # Needs bash 5 or later, git, helm, yq (v4) and sha256sum, and network access to helm.cilium.io.
 # helm runs with its own empty configuration, cache and data directories. Exit status: 0 when every
-# check passed, 1 when one failed, 2 when bash is older than 5 or a tool is missing.
+# check passed, 1 when one failed, 2 when bash is older than 5, a tool is missing, or the script is
+# run from a stream rather than by its path.
 test "${BASH_VERSINFO[0]:-0}" -ge 5 || { echo "cilium-values-check: needs bash 5 or later" >&2; exit 2; }
 set -euo pipefail
 
@@ -27,11 +28,17 @@ me=cilium-values-check
 # reaches git, helm or yq: not GIT_DIR or GIT_WORK_TREE, which would make git find another
 # checkout; not HELM_*, KUBECONFIG or HOME, which would give helm the user's configuration; and the
 # new bash gets no BASH_ENV or exported function. The new bash sources the file this shell opened
-# (BASH_SOURCE), made absolute, so that no PATH lookup can bring in another copy. Handing over
-# here, before anything is defined, means that a run can't end without main: a run found on PATH,
-# or a truncated copy of this file, fails instead of passing unchecked.
+# (BASH_SOURCE), made absolute, so that no PATH lookup can bring in another copy; a stream
+# (bash <(...), /dev/stdin, /dev/fd/N, a FIFO) can't be read again whole, so it is refused. Handing
+# over here, before anything is defined, means that a run can't end without main: a run found on
+# PATH, or a copy cut after this point, fails instead of passing unchecked. main sets strict mode
+# itself, whatever the shell that sources this file has set.
 if ! (return 0 2> /dev/null); then
   case "${BASH_SOURCE[0]}" in /*) self="${BASH_SOURCE[0]}" ;; *) self="$PWD/${BASH_SOURCE[0]}" ;; esac
+  if case "$self" in /dev/* | /proc/*) true ;; *) ! test -f "$self" ;; esac; then
+    echo "$me: run this script by its path: $self is not a regular file that can be read again" >&2
+    exit 2
+  fi
   exec env -i PATH="$PATH" ${TMPDIR:+"TMPDIR=$TMPDIR"} ${RUNNER_TEMP:+"RUNNER_TEMP=$RUNNER_TEMP"} \
     "$BASH" -c 'source "$1"; main' "$me" "$self"
 fi
@@ -225,6 +232,7 @@ read_metadata() {
 }
 
 main() {
+  set -euo pipefail
   local tool
   for tool in git helm yq sha256sum paste; do
     command -v "$tool" > /dev/null || { echo "$me: $tool is not on PATH" >&2; exit 2; }
