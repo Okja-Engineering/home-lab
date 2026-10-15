@@ -98,7 +98,7 @@ The block below writes `generated/cp-01.yaml` to `generated/cp-03.yaml` and `gen
 - **It decrypts the committed bundle itself, every time,** to `secrets/secrets.yaml` (mode 0600). A file already there is never used: it is replaced, and only when the decrypt succeeds.
 - **It stops at the first error.** Each refusal starts with `Stopping:` and gives its reason. A run that stops partway may leave a temporary directory in the system's temporary folder; it holds committed files only, with the bundle still encrypted.
 - **Never commit `generated/`.** The machine configs and `talosconfig` hold the cluster's secrets. Git ignores `generated/` and `secrets/`.
-- **To test the block,** run it in a scratch clone whose committed `secrets.sops.yaml` is a throwaway bundle encrypted to a throwaway age key. This repository's `secrets/` never holds a throwaway.
+- **To test the block,** run it in a scratch clone whose committed `secrets.sops.yaml` is a throwaway bundle encrypted to a throwaway age key. This repository's `secrets/` never holds a throwaway. CI does this on every pull request: the `talos-config` job runs the block as written, in a temporary copy, and checks the configs it generates (`scripts/talos-config-check.sh`).
 
 <!-- talos-generate-configs:begin -->
 ```bash
