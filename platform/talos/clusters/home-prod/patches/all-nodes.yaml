@@ -16,14 +16,14 @@ installer:
   image: factory.talos.dev/metal-installer/2d61dd07b20062062ea671b4d01873506103b67c0f7a4c3fb6cf4ee85585dcb8:v1.14.2
 provisioning:
   diskSelector:
-    match: disk.transport == "nvme"
+    match: disk.dev_path == "/dev/sda"
 ---
 # The time servers: NTP_SERVERS, with NTS on (NTP_USE_NTS). NTS needs host names, not IP addresses.
 # Set here only: a later patch would add to this list, not replace it.
 apiVersion: v1alpha1
 kind: TimeSyncConfig
 ntp:
-  serverz:
+  servers:
     - time.cloudflare.com
   useNTS: true
 ---
