@@ -87,7 +87,7 @@ Paste this from anywhere inside the repository. It installs only committed files
 
 Done means the agent and Envoy have rolled out, the operator is available, and cp-01 is `Ready`. Of the operator's two replicas, one stays `Pending` until a second node joins: the two must run on different nodes. One running replica is enough for the operator to count as available, but not for `cilium status`, which is why that check waits for the next step.
 
-- **Pasting it again** stops at `helm install` with "cannot re-use a name that is still in use": the release is installed already. That is by design.
+- **Pasting it again** stops at `helm install` with "cannot reuse a name that is still in use", by design. That means a release named `cilium` exists, not that it deployed: helm 4 gives the same error after an install that failed or was interrupted. `helm status cilium --namespace kube-system --kubeconfig "$KUBECONFIG"` shows its status, which is `deployed` once an install has finished.
 - **A run that stops partway** can leave a `tmp.*` directory in the per-user temporary folder (`getconf DARWIN_USER_TEMP_DIR`). It holds copies of the committed `metadata.env` and `values.yaml`, and perhaps the public chart. Nothing in it is secret, and it can be deleted.
 
 ## Check Readiness After cp-02 and cp-03 Join
