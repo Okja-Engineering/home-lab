@@ -1,5 +1,6 @@
 # Talos rules for gitleaks: the secrets that talosctl and kubectl write, and
-# age identities, which open the SOPS-encrypted Talos secrets bundle.
+# any age identity (an age private key). Only the owner's identity opens the
+# SOPS-encrypted Talos secrets bundle, but the rule catches every one.
 #
 # One of the two rule sets that scripts/secret-scan.sh applies, for the
 # pre-commit hook and for the CI scan alike. The other is .gitleaks.toml,
