@@ -1,0 +1,27 @@
+# cp-01 only. Talos v1.14 configuration documents. talosctl substitutes nothing, so each value is a
+# copy of the metadata.env key its comment names: change both together.
+
+# The hostname. A fixed hostname needs auto: "off".
+apiVersion: v1alpha1
+kind: HostnameConfig
+hostname: cp-01
+auto: "off"
+---
+# The port alias lan0, selected by its bus path, NETWORK_INTERFACE_BUS_PATH, not by MAC address
+# (ADR-007). Each machine has one Ethernet port (ETHERNET_PORT_COUNT). This document carries a CEL
+# expression, so no other patch may merge into it (siderolabs/talos#14584).
+apiVersion: v1alpha1
+kind: LinkAliasConfig
+name: lan0
+selector:
+  match: link.bus_path == "0000:03:00.0"
+---
+# The static address on lan0, CP_01_IP with NODE_PREFIX_LENGTH, and the default route via
+# DEFAULT_GATEWAY (ADR-007, ADR-014). Set here only: a later patch would add to these lists.
+apiVersion: v1alpha1
+kind: LinkConfig
+name: lan0
+addresses:
+  - address: 10.0.0.21/24
+routes:
+  - gateway: 10.0.0.1

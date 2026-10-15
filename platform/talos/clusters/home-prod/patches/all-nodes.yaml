@@ -1,0 +1,46 @@
+# Every node, control-plane and worker alike. Talos v1.14 configuration documents. talosctl
+# substitutes nothing, so each value is a copy of the metadata.env key its comment names: change
+# both together.
+
+# The install disk and the installer image.
+# - installer.image: TALOS_INSTALLER_IMAGE, the pinned Image Factory schematic (ADR-009).
+# - provisioning.diskSelector.match: INSTALL_DISK_TRANSPORT. Only NVMe disks match, and each machine
+#   has one, its install disk. Talos's default selects /dev/sda, which is the boot drive during the
+#   install. This document carries a CEL expression, so no other patch may merge into it: a merge
+#   drops the expression unless it repeats it (siderolabs/talos#14584).
+# - provisioning.wipe is left as generated (false). The install erases the selected disk whatever
+#   wipe says.
+apiVersion: v1alpha1
+kind: UnattendedInstallConfig
+installer:
+  image: factory.talos.dev/metal-installer/2d61dd07b20062062ea671b4d01873506103b67c0f7a4c3fb6cf4ee85585dcb8:v1.14.2
+provisioning:
+  diskSelector:
+    match: disk.transport == "nvme"
+---
+# The time servers: NTP_SERVERS, with NTS on (NTP_USE_NTS). NTS needs host names, not IP addresses.
+# Set here only: a later patch would add to this list, not replace it.
+apiVersion: v1alpha1
+kind: TimeSyncConfig
+ntp:
+  servers:
+    - time.cloudflare.com
+  useNTS: true
+---
+# The name servers: DNS_SERVERS, one entry per server, in order. Set here only: a later patch would
+# add to this list, not replace it.
+apiVersion: v1alpha1
+kind: ResolverConfig
+nameservers:
+  - address: 1.1.1.1
+  - address: 9.9.9.9
+---
+# The pod and Service subnets: POD_SUBNETS and SERVICE_SUBNETS, IPv4 only (ADR-016) and clear of the
+# nodes' subnet (ADR-014). They are in this patch, which every node receives, because each node's
+# kubelet takes its cluster DNS address from the Service subnet. No other patch sets this document.
+apiVersion: v1alpha1
+kind: KubeNetworkConfig
+podSubnets:
+  - 10.244.0.0/16
+serviceSubnets:
+  - 10.96.0.0/12

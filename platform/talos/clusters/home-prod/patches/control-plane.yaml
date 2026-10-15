@@ -1,0 +1,28 @@
+# Control-plane nodes. Talos v1.14 configuration documents. talosctl substitutes nothing, so each
+# value is a copy of the metadata.env key its comment names: change both together. The pod and
+# Service subnets are not here: every node needs them, so they are in all-nodes.yaml.
+
+# No default CNI (Flannel) and no kube-proxy: Cilium replaces both (ADR-005). These two documents
+# are from the Talos "Deploy Cilium" guide.
+apiVersion: v1alpha1
+kind: KubeFlannelCNIConfig
+$patch: delete
+---
+apiVersion: v1alpha1
+kind: KubeProxyConfig
+enabled: false
+---
+# Workloads may run on control-plane nodes (ADR-008), so the control-plane NoSchedule taint that the
+# generated KubeNodeConfig lists is deleted.
+apiVersion: v1alpha1
+kind: KubeNodeConfig
+taints:
+  node-role.kubernetes.io/control-plane:
+    $patch: delete
+---
+# The shared VIP that serves the Kubernetes API endpoint (ADR-006): name is CLUSTER_VIP. link is the
+# port alias lan0, which each nodes/cp-0N.yaml defines.
+apiVersion: v1alpha1
+kind: Layer2VIPConfig
+name: 10.0.0.20
+link: lan0
