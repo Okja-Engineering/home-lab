@@ -35,6 +35,21 @@ test "${BASH_VERSINFO[0]:-0}" -ge 5 || { echo "talos-config-check: needs bash 5 
 set -euo pipefail
 
 me=talos-config-check
+
+# Run rather than sourced, this shell goes no further: main runs in a new bash whose environment
+# holds only PATH, TMPDIR and RUNNER_TEMP from the caller's, so nothing else the caller exports
+# reaches git, sops, talosctl or the block: not GIT_DIR or GIT_INDEX_FILE, which git sets for its
+# hooks and which would point the copy's git at the caller's repository; not SOPS_*, which would
+# steer sops; and the new bash gets no HOME, BASH_ENV or exported function. The new bash sources
+# the file this shell opened (BASH_SOURCE), made absolute, so that no PATH lookup can bring in
+# another copy. Handing over here, before anything is defined, means that a run can't end without
+# main: a run found on PATH, or a truncated copy of this file, fails instead of passing unchecked.
+if ! (return 0 2> /dev/null); then
+  case "${BASH_SOURCE[0]}" in /*) self="${BASH_SOURCE[0]}" ;; *) self="$PWD/${BASH_SOURCE[0]}" ;; esac
+  exec env -i PATH="$PATH" ${TMPDIR:+"TMPDIR=$TMPDIR"} ${RUNNER_TEMP:+"RUNNER_TEMP=$RUNNER_TEMP"} \
+    "$BASH" -c 'source "$1"; main' "$me" "$self"
+fi
+
 d=platform/talos/clusters/home-prod
 nodes=(cp-01 cp-02 cp-03)
 
@@ -474,7 +489,7 @@ read_metadata() {
   done
 }
 
-# Check the tools, read metadata.env and make the work directory. HOME is not set (see the end of
+# Check the tools, read metadata.env and make the work directory. HOME is not set (see the top of
 # this file), so git and sops read no configuration or keys of the user's.
 prepare() {
   local tool
@@ -767,15 +782,3 @@ main() {
   fi
   echo "$me: every check passed"
 }
-
-# main runs in a new bash whose environment holds only PATH, TMPDIR and RUNNER_TEMP from the
-# caller's, so nothing else the caller exports reaches git, sops, talosctl or the block: not
-# GIT_DIR or GIT_INDEX_FILE, which git sets for its hooks and which would point the copy's git at
-# the caller's repository; not SOPS_*, which would steer sops; and the new bash gets no HOME,
-# BASH_ENV or exported function. It sources this file by its absolute path: a bare name, as when
-# the script is run as "bash talos-config-check.sh", would make source search PATH first.
-if test "${BASH_SOURCE[0]}" = "$0"; then
-  case "$0" in /*) self="$0" ;; *) self="$PWD/$0" ;; esac
-  exec env -i PATH="$PATH" ${TMPDIR:+"TMPDIR=$TMPDIR"} ${RUNNER_TEMP:+"RUNNER_TEMP=$RUNNER_TEMP"} \
-    "$BASH" -c 'source "$1"; main' "$me" "$self"
-fi

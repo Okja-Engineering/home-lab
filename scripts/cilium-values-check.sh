@@ -21,6 +21,21 @@ test "${BASH_VERSINFO[0]:-0}" -ge 5 || { echo "cilium-values-check: needs bash 5
 set -euo pipefail
 
 me=cilium-values-check
+
+# Run rather than sourced, this shell goes no further: main runs in a new bash whose environment
+# holds only PATH, TMPDIR and RUNNER_TEMP from the caller's, so nothing else the caller exports
+# reaches git, helm or yq: not GIT_DIR or GIT_WORK_TREE, which would make git find another
+# checkout; not HELM_*, KUBECONFIG or HOME, which would give helm the user's configuration; and the
+# new bash gets no BASH_ENV or exported function. The new bash sources the file this shell opened
+# (BASH_SOURCE), made absolute, so that no PATH lookup can bring in another copy. Handing over
+# here, before anything is defined, means that a run can't end without main: a run found on PATH,
+# or a truncated copy of this file, fails instead of passing unchecked.
+if ! (return 0 2> /dev/null); then
+  case "${BASH_SOURCE[0]}" in /*) self="${BASH_SOURCE[0]}" ;; *) self="$PWD/${BASH_SOURCE[0]}" ;; esac
+  exec env -i PATH="$PATH" ${TMPDIR:+"TMPDIR=$TMPDIR"} ${RUNNER_TEMP:+"RUNNER_TEMP=$RUNNER_TEMP"} \
+    "$BASH" -c 'source "$1"; main' "$me" "$self"
+fi
+
 d=platform/talos/clusters/home-prod
 
 # The metadata.env values this script reads (read_metadata), and no others.
@@ -258,15 +273,3 @@ main() {
   fi
   echo "$me: every check passed"
 }
-
-# main runs in a new bash whose environment holds only PATH, TMPDIR and RUNNER_TEMP from the
-# caller's, so nothing else the caller exports reaches git, helm or yq: not GIT_DIR or
-# GIT_WORK_TREE, which would make git find another checkout; not HELM_*, KUBECONFIG or HOME, which
-# would give helm the user's configuration; and the new bash gets no BASH_ENV or exported function.
-# It sources this file by its absolute path: a bare name, as when the script is run as
-# "bash cilium-values-check.sh", would make source search PATH first.
-if test "${BASH_SOURCE[0]}" = "$0"; then
-  case "$0" in /*) self="$0" ;; *) self="$PWD/$0" ;; esac
-  exec env -i PATH="$PATH" ${TMPDIR:+"TMPDIR=$TMPDIR"} ${RUNNER_TEMP:+"RUNNER_TEMP=$RUNNER_TEMP"} \
-    "$BASH" -c 'source "$1"; main' "$me" "$self"
-fi
