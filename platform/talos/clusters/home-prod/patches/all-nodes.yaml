@@ -23,7 +23,7 @@ provisioning:
 apiVersion: v1alpha1
 kind: TimeSyncConfig
 ntp:
-  servers:
+  serverz:
     - time.cloudflare.com
   useNTS: true
 ---
