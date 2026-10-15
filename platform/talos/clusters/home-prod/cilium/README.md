@@ -45,7 +45,7 @@ Paste this from anywhere inside the repository. It installs only committed files
     echo "Stopping: metadata.env or cilium/values.yaml has uncommitted changes. Cilium is installed only from committed files. Nothing was installed." >&2
     exit 1
   fi
-  h="$(env | awk -F= '/^HELM_/ { s = s " " $1 } END { print s }')"
+  h="$(env | LC_ALL=C awk -F= '/^HELM_/ { s = s " " $1 } END { print s }')"
   if test -n "$h"; then
     echo "Stopping: helm would read these variables:$h. Unset them, then paste again. Nothing was installed." >&2
     exit 1
