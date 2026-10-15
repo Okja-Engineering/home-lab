@@ -5,6 +5,8 @@
 #
 # Reads what git will publish (the index copies of .sops.yaml and of
 # platform/talos/clusters/home-prod/secrets.sops.yaml), never the working tree. Passes only when:
+#   - each of the two holds only printable ASCII and line feeds, so it splits into lines here just
+#     as it does in sops's YAML parser, which also breaks lines at CR, NEL, LS and PS, and refuses NUL;
 #   - .sops.yaml's non-comment lines are exactly the one creation rule, with one age X25519 recipient
 #     (and that recipient is EXPECTED, when given);
 #   - no other secrets.sops.yaml exists anywhere in the checkout, staged or not;
@@ -14,7 +16,7 @@
 #   - a bundle in the working tree that is not staged fails; with --require-bundle, it must be staged.
 # What this cannot show is whose key the one stanza opens; the owner shows that by decrypting once
 # with his key (issue 19). Any git failure fails the check.
-# Needs sh, git, grep, sed, awk and age-inspect (shipped with age 1.3.2).
+# Needs sh, git, grep, sed, awk, tr, cmp and age-inspect (shipped with age 1.3.2).
 # Exit 0 when all hold; 1 when anything is wrong or unexpected; 2 on wrong usage or a missing tool.
 # It exits 0 in one place only: its last line. A shell reads a script one command at a time, so by
 # then it has read every line above, and a syntax error anywhere has already stopped it. There is
@@ -32,6 +34,10 @@ usage() {
   echo "usage: $0 [--require-bundle] [age-recipient]" >&2
   exit 2
 }
+# True when every byte of the file is printable ASCII or a line feed.
+printable() {
+  LC_ALL=C tr -cd '\n -~' < "$1" | cmp -s - "$1"
+}
 
 require=0
 if test "${1:-}" = --require-bundle; then
@@ -47,6 +53,7 @@ b=platform/talos/clusters/home-prod/secrets.sops.yaml
 x25519='age1[02-9ac-hj-np-z]{58}'
 
 git cat-file blob :.sops.yaml > "$work/rule" 2>/dev/null || fail ".sops.yaml is not committed or staged"
+printable "$work/rule" || fail ".sops.yaml holds a byte other than printable ASCII and line feeds"
 body="$(grep -v -E '^[[:space:]]*(#|$)' "$work/rule" || true)"
 recipient="$(printf '%s\n' "$body" | sed -n -E "3s/^    age: ($x25519)\$/\\1/p")"
 want="$(printf '%s\n' 'creation_rules:' '  - path_regex: platform/talos/clusters/.*/secrets\.sops\.yaml$' "    age: $recipient")"
@@ -71,6 +78,7 @@ if test -z "$staged"; then
   verdict="no secrets.sops.yaml yet"
 else
   git cat-file blob ":$b" > "$work/bundle" || fail "git could not read the staged $b"
+  printable "$work/bundle" || fail "the staged $b holds a byte other than printable ASCII and line feeds"
   awk -v rec="$recipient" -v out="$work/enc" '
     BEGIN { s = "data"; encs = 0 }
     s == "data" && /^sops:$/ { s = "age"; next }
