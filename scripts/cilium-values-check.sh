@@ -23,6 +23,9 @@ set -euo pipefail
 me=cilium-values-check
 d=platform/talos/clusters/home-prod
 
+# The metadata.env values this script reads (read_metadata), and no others.
+metadata_keys=(CILIUM_VERSION CILIUM_CHART_SHA256 POD_SUBNETS)
+
 # Every container in the render, with the capabilities it adds, sorted. Any other container fails.
 capabilities=(
   "cilium-envoy/cilium-envoy: NET_ADMIN,SYS_ADMIN"
@@ -148,6 +151,22 @@ check_render() {
     "$(q '[select(.kind == "Deployment" and .metadata.name == "cilium-operator")] | .[0].spec.replicas' "$r")"
 }
 
+# Set each of metadata_keys to its value in metadata.env, and set nothing else. The file is sourced
+# in a subshell, and only these values come back, as data: no other name the file sets (one of this
+# script's own, such as mode or failures, or PATH or IFS) reaches this script.
+read_metadata() {
+  local -a got
+  local i
+  mapfile -d '' -t got < <(
+    source "$top/$d/metadata.env" > /dev/null
+    for k in "${metadata_keys[@]}"; do printf '%s\0' "${!k-}" "${!k+set}"; done
+  )
+  for i in "${!metadata_keys[@]}"; do
+    test "${got[2 * i + 1]-}" = set || { echo "$me: $d/metadata.env does not set ${metadata_keys[i]}" >&2; exit 1; }
+    printf -v "${metadata_keys[i]}" '%s' "${got[2 * i]}"
+  done
+}
+
 main() {
   local tool
   for tool in git helm yq sha256sum paste; do
@@ -155,8 +174,7 @@ main() {
   done
   top="$(git rev-parse --show-toplevel 2> /dev/null)" || { echo "$me: run this inside the repository" >&2; exit 1; }
   test -f "$top/$d/metadata.env" || { echo "$me: $d/metadata.env is missing" >&2; exit 1; }
-  # shellcheck source=/dev/null
-  source "$top/$d/metadata.env"
+  read_metadata
   local values="$top/$d/cilium/values.yaml"
   test -f "$values" || { echo "$me: $d/cilium/values.yaml is missing" >&2; exit 1; }
   if test -z "$CILIUM_VERSION" || test -z "$CILIUM_CHART_SHA256"; then

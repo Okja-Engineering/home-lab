@@ -38,6 +38,14 @@ me=talos-config-check
 d=platform/talos/clusters/home-prod
 nodes=(cp-01 cp-02 cp-03)
 
+# The metadata.env values the checks read (read_metadata), and no others.
+metadata_keys=(
+  TALOS_VERSION KUBERNETES_VERSION TALOS_INSTALLER_IMAGE INSTALL_DISK_TRANSPORT
+  CLUSTER_NAME CLUSTER_ENDPOINT CLUSTER_VIP CP_01_IP CP_02_IP CP_03_IP NODE_PREFIX_LENGTH
+  NETWORK_INTERFACE_BUS_PATH DEFAULT_GATEWAY DNS_SERVERS NTP_SERVERS NTP_USE_NTS
+  POD_SUBNETS SERVICE_SUBNETS
+)
+
 # The checks the generator's output without the patches must fail, and no others: the values the
 # patches exist to set.
 selftest_red=(
@@ -397,6 +405,23 @@ refusal() {
   fi
 }
 
+# Set each of metadata_keys to its value in metadata.env, and set nothing else. The file is sourced
+# in a subshell, as the block sources it, and only these values come back, as data: no other name
+# the file sets (one of this script's own, such as mode or failures, or PATH or IFS) reaches this
+# script.
+read_metadata() {
+  local -a got
+  local i
+  mapfile -d '' -t got < <(
+    source "$top/$d/metadata.env" > /dev/null
+    for k in "${metadata_keys[@]}"; do printf '%s\0' "${!k-}" "${!k+set}"; done
+  )
+  for i in "${!metadata_keys[@]}"; do
+    test "${got[2 * i + 1]-}" = set || { echo "$me: $d/metadata.env does not set ${metadata_keys[i]}" >&2; exit 1; }
+    printf -v "${metadata_keys[i]}" '%s' "${got[2 * i]}"
+  done
+}
+
 # Check the tools, read metadata.env and make the work directory. HOME is not set (see the end of
 # this file), so git and sops read no configuration or keys of the user's.
 prepare() {
@@ -406,8 +431,7 @@ prepare() {
   done
   top="$(git rev-parse --show-toplevel 2> /dev/null)" || { echo "$me: run this inside the repository" >&2; exit 1; }
   test -f "$top/$d/metadata.env" || { echo "$me: $d/metadata.env is missing" >&2; exit 1; }
-  # shellcheck source=/dev/null
-  source "$top/$d/metadata.env"
+  read_metadata
   work="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/talos-config.XXXXXX")"
   trap on_exit EXIT
   mkdir "$work/home" "$work/blocktmp"
