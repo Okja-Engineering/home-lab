@@ -23,10 +23,10 @@
 #      and that the block stops at a failing command.
 # It prints "ok <check>" or "FAIL <check>: expected ..., got ...", with values that are not secret.
 # It never prints a generated config, the bundle or a key. Everything it writes is in one temporary
-# directory, removed at the end, with one exception on macOS: there mktemp -d ignores TMPDIR, so each
-# refusal case that stops after the block's own mktemp -d leaves that tmp.* directory in the per-user
-# temporary folder (getconf DARWIN_USER_TEMP_DIR). Each holds committed files and the throwaway
-# bundle, encrypted to a key that no longer exists.
+# directory, removed at the end. On macOS, where mktemp -d ignores TMPDIR, the block's own temporary
+# directory goes to the per-user temporary folder (getconf DARWIN_USER_TEMP_DIR) instead, and the 5
+# block runs that stop after making it (4 refusal cases and the stop case) leave it there; at the
+# end the script removes each of those by name.
 #
 # Needs bash 5 or later, git, talosctl at metadata.env's TALOS_VERSION, sops, age-keygen, yq (v4),
 # python3, tar, awk, cmp and sha256sum. Exit status: 0 when every check passed, 1 when one failed,
@@ -83,10 +83,30 @@ die() {
   finished=yes
   exit 1
 }
-# The EXIT trap: remove the work directory. set -e stops the script at a command that fails
-# unexpectedly; say so, so that such a stop is never silent.
+# The block makes its own directory with mktemp -d and removes it when it finishes. macOS's mktemp -d
+# ignores TMPDIR, so there each block run that stops after that (the talosctl version, wrong key,
+# truncated bundle and mv refusals, the stop case, or a failed run) leaves a tmp.* directory in the
+# per-user temporary folder, holding the copy's committed files. Remove each one by name: a tmp.*
+# directory there whose secrets.sops.yaml is one of this run's throwaway bundles, which nothing else
+# holds. (Linux's mktemp -d puts it in TMPDIR, which run_block sets inside the work directory.)
+remove_block_temps() {
+  local user_tmp t b
+  user_tmp="$(getconf DARWIN_USER_TEMP_DIR 2> /dev/null)" || return 0
+  for t in "${user_tmp%/}"/tmp.*; do
+    for b in "$work/repo/$d/secrets.sops.yaml" "$work/truncated"; do
+      if test -f "$t/secrets.sops.yaml" && test -f "$b" && cmp -s "$b" "$t/secrets.sops.yaml"; then
+        rm -rf "$t"
+        break
+      fi
+    done
+  done
+}
+
+# The EXIT trap: remove the work directory, and what the block left outside it. set -e stops the
+# script at a command that fails unexpectedly; say so, so that such a stop is never silent.
 on_exit() {
   local rc=$?
+  remove_block_temps
   rm -rf "$work"
   if test "$rc" != 0 && test "$finished" != yes; then echo "$me: stopped early (status $rc)" >&2; fi
 }
