@@ -153,9 +153,14 @@ check_node() {
 
   eq "no KubeFlannelCNIConfig" 0 "$(q '[select(.kind == "KubeFlannelCNIConfig")] | length' "$f")" "$n"
   eq "KubeProxyConfig.enabled" false "$(q '[select(.kind == "KubeProxyConfig")] | .[0].enabled' "$f")" "$n"
+  # The taint's key in every field that sets a taint: Talos's node taints, and the kubelet's
+  # registerWithTaints, in its configuration or as its flag (a string or a list, comma-separated).
   eq "no control-plane taint" 0 \
-    "$(q '[select(.kind == "KubeNodeConfig") | .taints // {} | keys | .[] |
-      select(. == "node-role.kubernetes.io/control-plane")] | length' "$f")" "$n"
+    "$(q '[(select(.kind == "KubeNodeConfig") | .taints // {} | keys | .[]),
+      (select(.kind == "KubeletConfig") | .config.registerWithTaints // [] | .[] | .key),
+      (select(.kind == "KubeletConfig") | .extraArgs["register-with-taints"] // [] | [.] | flatten | .[] |
+        split(",") | .[] | sub("[=:].*"; ""))] |
+      map(select(. == "node-role.kubernetes.io/control-plane")) | length' "$f")" "$n"
 
   eq "endpoint" "$CLUSTER_ENDPOINT" "$(q '[select(.kind == "KubeClusterConfig")] | .[0].endpoint' "$f")" "$n"
   # The block names the cluster with a literal, so this ties it to metadata.env.
