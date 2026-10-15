@@ -241,9 +241,13 @@ check_sources() {
 }
 
 # The single-copy rule. Fenced code is CommonMark's: a run of 3 or more ` or ~ (behind any number of
-# > blockquote markers and any indentation), closed by a run of the same character at least as long;
-# a ` run whose info string holds a ` is not a fence. Indented code blocks are not checked. A marker
-# is a whole line at column 0; a marker-shaped line anywhere else fails. Writes each block's code to
+# > blockquote markers and any indentation) opens a fence; a ` run whose info string holds a ` is
+# not a fence. The fence is closed, as CommonMark closes it, by a run of the same character at least
+# as long, with nothing after it but spaces, behind the opening fence's > markers and indented at
+# most 3 columns more than the opening fence (a tab reaches the next multiple of 4; counting from
+# the opening fence keeps a fence in a list item working). A line with fewer > markers ends the
+# blockquote, and the fence with it. Indented code blocks are not checked. A marker is a whole line
+# at column 0; a marker-shaped line anywhere else fails. Writes each block's code to
 # $D12_OUT/<name>.sh, prints ok or FAIL per block, and exits 1 when anything failed.
 # shellcheck disable=SC2016
 d12_awk='
@@ -251,6 +255,24 @@ function bad(msg) { print "FAIL single copy: " msg; failed = 1 }
 function closefile() {
   if (region) bad(file ":" regionline ": the " names[region] " begin marker has no end marker")
   region = 0; infence = 0
+}
+# s without its leading > markers, at most max of them (every one when max < 0). Sets depth to the
+# number removed.
+function unquote(s, max) {
+  depth = 0
+  while ((max < 0 || depth < max) && match(s, /^[ \t]*>[ ]?/)) { s = substr(s, RLENGTH + 1); depth++ }
+  return s
+}
+# The width of the indentation of s, a tab reaching the next multiple of 4.
+function indent(s,   i, w, c) {
+  w = 0
+  for (i = 1; i <= length(s); i++) {
+    c = substr(s, i, 1)
+    if (c == " ") w++
+    else if (c == "\t") w += 4 - w % 4
+    else break
+  }
+  return w
 }
 BEGIN {
   names[1] = "talos-generate-configs"; names[2] = "cilium-install"; names[3] = "cilium-ready"
@@ -260,59 +282,62 @@ BEGIN {
 FNR == 1 { closefile(); file = FILENAME }
 {
   line = $0
-  if (!infence) {
-    t = line
-    sub(/^[ \t>]+/, "", t)
-    sub(/[ \t]+$/, "", t)
-    if (t ~ /^<!-- [a-z0-9-]+:(begin|end) -->$/) {
-      nm = t
-      sub(/^<!-- /, "", nm)
-      sub(/:(begin|end) -->$/, "", nm)
-      if (nm in idx) {
-        i = idx[nm]
-        kind = (t ~ /:begin -->$/) ? "begin" : "end"
-        if (line != t) {
-          bad(file ":" FNR ": the " nm " " kind " marker must start at column 0, alone on its line")
-          next
-        }
-        if (kind == "begin") {
-          if (region) { bad(file ":" FNR ": the " nm " markers begin inside the " names[region] " markers"); next }
-          region = i; regionline = FNR; fences = 0; isbash = 0; begins[i]++
-          where[i] = where[i] (where[i] == "" ? "" : ", ") file ":" FNR
-        } else {
-          if (region != i) { bad(file ":" FNR ": the " nm " end marker has no begin marker before it"); next }
-          if (fences != 1 || !isbash) bad(file ":" regionline ": the " nm " markers must hold exactly one bash fence")
-          pairs[i]++; region = 0
-        }
+  if (infence) {
+    body = unquote(line, fdepth)
+    if (depth == fdepth) {
+      match(body, /^[ \t]*/)
+      rest = substr(body, RLENGTH + 1)
+      if (indent(body) <= findent + 3 && substr(rest, 1, 1) == fch && match(rest, /^(```+|~~~+)[ \t]*$/)) {
+        m = rest; sub(/[ \t]+$/, "", m)
+        if (length(m) >= flen) { infence = 0; inregion = 0; next }
+      }
+      for (i = 1; i <= 3; i++)
+        if (line ~ sig[i] && !(inregion && region == i))
+          bad(file ":" FNR ": fenced code outside the " names[i] " markers repeats that block (" sig[i] ")")
+      if (inregion && begins[region] == 1) print line > (out "/" names[region] ".sh")
+      next
+    }
+    infence = 0; inregion = 0
+  }
+  t = line
+  sub(/^[ \t>]+/, "", t)
+  sub(/[ \t]+$/, "", t)
+  if (t ~ /^<!-- [a-z0-9-]+:(begin|end) -->$/) {
+    nm = t
+    sub(/^<!-- /, "", nm)
+    sub(/:(begin|end) -->$/, "", nm)
+    if (nm in idx) {
+      i = idx[nm]
+      kind = (t ~ /:begin -->$/) ? "begin" : "end"
+      if (line != t) {
+        bad(file ":" FNR ": the " nm " " kind " marker must start at column 0, alone on its line")
         next
       }
+      if (kind == "begin") {
+        if (region) { bad(file ":" FNR ": the " nm " markers begin inside the " names[region] " markers"); next }
+        region = i; regionline = FNR; fences = 0; isbash = 0; begins[i]++
+        where[i] = where[i] (where[i] == "" ? "" : ", ") file ":" FNR
+      } else {
+        if (region != i) { bad(file ":" FNR ": the " nm " end marker has no begin marker before it"); next }
+        if (fences != 1 || !isbash) bad(file ":" regionline ": the " nm " markers must hold exactly one bash fence")
+        pairs[i]++; region = 0
+      }
+      next
     }
   }
-  body = line
-  while (match(body, /^[ \t]*>[ ]?/)) body = substr(body, RLENGTH + 1)
+  body = unquote(line, -1)
   match(body, /^[ \t]*/)
   rest = substr(body, RLENGTH + 1)
-  if (!infence) {
-    if (match(rest, /^(```+|~~~+)/)) {
-      ch = substr(rest, 1, 1); len = RLENGTH; info = substr(rest, len + 1)
-      if (ch == "`" && index(info, "`")) next
-      sub(/^[ \t]+/, "", info); sub(/[ \t]+$/, "", info)
-      infence = 1; fch = ch; flen = len; inregion = 0
-      if (region) {
-        fences++
-        if (fences == 1 && info == "bash") { isbash = 1; inregion = 1 }
-      }
+  if (match(rest, /^(```+|~~~+)/)) {
+    ch = substr(rest, 1, 1); len = RLENGTH; info = substr(rest, len + 1)
+    if (ch == "`" && index(info, "`")) next
+    sub(/^[ \t]+/, "", info); sub(/[ \t]+$/, "", info)
+    infence = 1; fch = ch; flen = len; fdepth = depth; findent = indent(body); inregion = 0
+    if (region) {
+      fences++
+      if (fences == 1 && info == "bash") { isbash = 1; inregion = 1 }
     }
-    next
   }
-  if (substr(rest, 1, 1) == fch && match(rest, /^(```+|~~~+)[ \t]*$/)) {
-    m = rest; sub(/[ \t]+$/, "", m)
-    if (length(m) >= flen) { infence = 0; inregion = 0; next }
-  }
-  for (i = 1; i <= 3; i++)
-    if (line ~ sig[i] && !(inregion && region == i))
-      bad(file ":" FNR ": fenced code outside the " names[i] " markers repeats that block (" sig[i] ")")
-  if (inregion && begins[region] == 1) print line > (out "/" names[region] ".sh")
 }
 END {
   closefile()
