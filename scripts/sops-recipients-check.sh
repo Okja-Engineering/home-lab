@@ -16,10 +16,16 @@
 # with his key (issue 19). Any git failure fails the check.
 # Needs sh, git, grep, sed, awk and age-inspect (shipped with age 1.3.2).
 # Exit 0 when all hold; 1 when anything is wrong or unexpected; 2 on wrong usage or a missing tool.
+# It exits 0 in one place only: its last line. A shell reads a script one command at a time, so by
+# then it has read every line above, and a syntax error anywhere has already stopped it. There is
+# no EXIT trap, because under macOS /bin/sh (bash 3.2) a shell that stops on a syntax error or an
+# unset variable while an EXIT trap is set exits 0. fail removes the work directory itself; a stop
+# exits non-zero, and may leave that directory behind, holding only copies of what is staged.
 set -eu
 
 fail() {
   echo "sops-recipients-check: FAILED: $*" >&2
+  rm -rf "$work"
   exit 1
 }
 usage() {
@@ -34,12 +40,11 @@ if test "${1:-}" = --require-bundle; then
 fi
 test "$#" -le 1 || usage
 command -v age-inspect > /dev/null || { echo "sops-recipients-check: age-inspect is not on PATH" >&2; exit 2; }
+work="$(mktemp -d)"
 top="$(git rev-parse --show-toplevel 2>/dev/null)" || fail "not inside a git repository"
 cd "$top"
 b=platform/talos/clusters/home-prod/secrets.sops.yaml
 x25519='age1[02-9ac-hj-np-z]{58}'
-work="$(mktemp -d)"
-trap 'rm -rf "$work"' EXIT
 
 git cat-file blob :.sops.yaml > "$work/rule" 2>/dev/null || fail ".sops.yaml is not committed or staged"
 body="$(grep -v -E '^[[:space:]]*(#|$)' "$work/rule" || true)"
@@ -63,28 +68,30 @@ if test -z "$staged"; then
     fail "$b is in the working tree but not staged; git add it first"
   fi
   test "$require" = 0 || fail "$b is not staged, and --require-bundle was given"
-  echo "ok: no secrets.sops.yaml yet"
-  exit 0
+  verdict="no secrets.sops.yaml yet"
+else
+  git cat-file blob ":$b" > "$work/bundle" || fail "git could not read the staged $b"
+  awk -v rec="$recipient" -v out="$work/enc" '
+    BEGIN { s = "data"; encs = 0 }
+    s == "data" && /^sops:$/ { s = "age"; next }
+    s == "data" && /^(    )*[a-z0-9]+:$/ { next }
+    s == "data" && /^(    )*[a-z0-9]+: ENC\[AES256_GCM,data:[A-Za-z0-9+\/=]+,iv:[A-Za-z0-9+\/=]+,tag:[A-Za-z0-9+\/=]+,type:(str|int|float|bool)\]$/ { encs++; next }
+    s == "age" && $0 == "    age:" { s = "entry"; next }
+    s == "entry" && $0 == "        - enc: |" { s = "begin"; next }
+    s == "begin" && $0 == "            -----BEGIN AGE ENCRYPTED FILE-----" { print substr($0, 13) > out; s = "armor"; next }
+    s == "armor" && /^            [A-Za-z0-9+\/=]+$/ { print substr($0, 13) > out; lines++; next }
+    s == "armor" && lines > 0 && $0 == "            -----END AGE ENCRYPTED FILE-----" { print substr($0, 13) > out; s = "rec"; next }
+    s == "rec" && $0 == "          recipient: " rec { s = "lm"; next }
+    s == "lm" && /^    lastmodified: "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9]Z"$/ { s = "mac"; next }
+    s == "mac" && /^    mac: ENC\[AES256_GCM,data:[A-Za-z0-9+\/=]+,iv:[A-Za-z0-9+\/=]+,tag:[A-Za-z0-9+\/=]+,type:str\]$/ { s = "suffix"; next }
+    s == "suffix" && $0 == "    unencrypted_suffix: _unencrypted" { s = "version"; next }
+    s == "version" && /^    version: [0-9]+\.[0-9]+\.[0-9]+$/ { s = "end"; next }
+    { bad = 1; exit }
+    END { exit (bad || s != "end" || encs == 0) ? 1 : 0 }
+  ' "$work/bundle" || fail "the staged $b is not exactly a sops file with one age recipient, the one in .sops.yaml"
+  age-inspect --json "$work/enc" | tr -d ' \n\t' | grep -q '"stanza_types":\["X25519"\]' ||
+    fail "the staged $b: its age entry does not hold exactly one X25519 stanza"
+  verdict="the staged $b has one age recipient, the one in .sops.yaml, and one X25519 stanza"
 fi
-git cat-file blob ":$b" > "$work/bundle" || fail "git could not read the staged $b"
-awk -v rec="$recipient" -v out="$work/enc" '
-  BEGIN { s = "data"; encs = 0 }
-  s == "data" && /^sops:$/ { s = "age"; next }
-  s == "data" && /^(    )*[a-z0-9]+:$/ { next }
-  s == "data" && /^(    )*[a-z0-9]+: ENC\[AES256_GCM,data:[A-Za-z0-9+\/=]+,iv:[A-Za-z0-9+\/=]+,tag:[A-Za-z0-9+\/=]+,type:(str|int|float|bool)\]$/ { encs++; next }
-  s == "age" && $0 == "    age:" { s = "entry"; next }
-  s == "entry" && $0 == "        - enc: |" { s = "begin"; next }
-  s == "begin" && $0 == "            -----BEGIN AGE ENCRYPTED FILE-----" { print substr($0, 13) > out; s = "armor"; next }
-  s == "armor" && /^            [A-Za-z0-9+\/=]+$/ { print substr($0, 13) > out; lines++; next }
-  s == "armor" && lines > 0 && $0 == "            -----END AGE ENCRYPTED FILE-----" { print substr($0, 13) > out; s = "rec"; next }
-  s == "rec" && $0 == "          recipient: " rec { s = "lm"; next }
-  s == "lm" && /^    lastmodified: "[0-9][0-9][0-9][0-9]-[0-9][0-9]-[0-9][0-9]T[0-9][0-9]:[0-9][0-9]:[0-9][0-9]Z"$/ { s = "mac"; next }
-  s == "mac" && /^    mac: ENC\[AES256_GCM,data:[A-Za-z0-9+\/=]+,iv:[A-Za-z0-9+\/=]+,tag:[A-Za-z0-9+\/=]+,type:str\]$/ { s = "suffix"; next }
-  s == "suffix" && $0 == "    unencrypted_suffix: _unencrypted" { s = "version"; next }
-  s == "version" && /^    version: [0-9]+\.[0-9]+\.[0-9]+$/ { s = "end"; next }
-  { bad = 1; exit }
-  END { exit (bad || s != "end" || encs == 0) ? 1 : 0 }
-' "$work/bundle" || fail "the staged $b is not exactly a sops file with one age recipient, the one in .sops.yaml"
-age-inspect --json "$work/enc" | tr -d ' \n\t' | grep -q '"stanza_types":\["X25519"\]' ||
-  fail "the staged $b: its age entry does not hold exactly one X25519 stanza"
-echo "ok: the staged $b has one age recipient, the one in .sops.yaml, and one X25519 stanza"
+rm -rf "$work"
+echo "ok: $verdict"
