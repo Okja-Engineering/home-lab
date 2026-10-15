@@ -79,6 +79,7 @@ q() {
 }
 
 # Every container of every workload: Pods, the controllers' pod templates, and CronJobs'.
+# shellcheck disable=SC2016
 workload_containers='
   select(.kind == "Pod" or .kind == "DaemonSet" or .kind == "Deployment" or .kind == "StatefulSet" or
     .kind == "ReplicaSet" or .kind == "Job" or .kind == "CronJob") |

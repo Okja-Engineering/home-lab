@@ -329,6 +329,8 @@ snapshot() {
     if test -L "$f"; then
       printf 'link %s -> %s\n' "$f" "$(readlink "$f")"
     elif test -f "$f"; then
+      # ls -l | cut reads the mode the same way on macOS and Linux; stat's options differ.
+      # shellcheck disable=SC2012
       printf 'file %s %s %s\n' "$f" "$(ls -l "$f" | cut -c1-10)" "$(sha256sum < "$f" | cut -c1-64)"
     elif test -d "$f"; then
       printf 'directory %s\n' "$f"
@@ -469,6 +471,7 @@ run_twice() {
   else
     fail "run 1 left secrets/secrets.yaml different from the committed bundle's plaintext"
   fi
+  # shellcheck disable=SC2012
   eq "secrets/secrets.yaml mode" "-rw-------" "$(ls -l "$c/secrets/secrets.yaml" | cut -c1-10)"
   bundle_ca="$(q '.certs.os.crt' "$work/plain.yaml")"
   test -n "$bundle_ca" && test "$bundle_ca" != null && bundle_ca="$(printf '%s' "$bundle_ca" | sha256sum | cut -c1-64)"
@@ -483,6 +486,7 @@ run_twice() {
 
   local -a shell=(bash) shell_env=()
   if command -v zsh > /dev/null; then
+    # shellcheck disable=SC2016
     if test "$(env HOME="$work/home" zsh -f -c 'printf %s "$HOME"')" != "$work/home"; then
       fail "run 2: zsh does not keep the work directory's HOME, so it was not run"
       exit 1
@@ -596,6 +600,7 @@ check_refusals() {
   # A stub talosctl that reports another version and records every other call.
   mkdir -p "$work/stub"
   : > "$work/stub/calls"
+  # shellcheck disable=SC2016
   stub='#!/bin/sh\nif test "$1" = version; then printf "Client:\\nTalos v1.15.0\\n"; exit 0; fi\necho "$*" >> "%s"\n'
   # shellcheck disable=SC2059
   printf "$stub" "$work/stub/calls" > "$work/stub/talosctl"
