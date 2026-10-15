@@ -1,0 +1,89 @@
+# Helm values for Cilium, the CNI of the home-prod Talos cluster (ADR-005). They are installed with
+# the chart version pinned as CILIUM_VERSION in ../metadata.env, from a chart file checked against
+# CILIUM_CHART_SHA256 there. README.md, next to this file, has the install and readiness steps.
+#
+# Taken from the Talos guide "Deploy Cilium", read on 2026-10-14, and checked against the defaults
+# of the Cilium 1.20.2 chart:
+# https://docs.siderolabs.com/kubernetes-guides/cni/deploying-cilium
+# The guide gives ipam.mode, kubeProxyReplacement, k8sServiceHost, k8sServicePort, the two cgroup
+# settings and the two capability lists. Every other key is this cluster's choice, with its reason.
+
+# Pod addresses come from the range Kubernetes assigns to each node out of the cluster's pod subnet.
+# The guide sets this, and this cluster needs it for a second reason (ADR-014): the chart's default
+# mode, cluster-pool, hands out pod addresses from 10.0.0.0/8, which contains the nodes' 10.0.0.0/24.
+ipam:
+  mode: kubernetes
+
+# IPv4-only pod and Service networking, decided on 2026-10-14 (ADR-016). Both values equal the
+# chart's defaults; they are written out so that the decision is visible and checked.
+ipv4:
+  enabled: true
+ipv6:
+  enabled: false
+
+# Cilium replaces kube-proxy (ADR-005), which the Talos patches turn off. Without kube-proxy, the
+# agent reaches the API server through KubePrism, Talos's load balancer on every node at
+# localhost:7445, before any Service works.
+kubeProxyReplacement: true
+k8sServiceHost: localhost
+k8sServicePort: 7445
+
+# Talos already mounts cgroup2 at /sys/fs/cgroup and the BPF filesystem, and the guide says not to
+# let Cilium mount either. The guide's values cover cgroup; bpf.autoMount follows from the same
+# instruction, and turning it off removes the chart's only privileged container.
+cgroup:
+  autoMount:
+    enabled: false
+  hostRoot: /sys/fs/cgroup
+bpf:
+  autoMount:
+    enabled: false
+
+# Native routing, decided by the owner on 2026-10-14: pod traffic between nodes is routed, not
+# tunnelled. autoDirectNodeRoutes adds a route to each node's pod range through that node, which
+# needs every node on one L2 segment; the nodes are all on 10.0.0.0/24. 10.244.0.0/16 is the pod
+# subnet, POD_SUBNETS in ../metadata.env, and the two must stay equal. To switch back to the chart's
+# VXLAN tunnel, delete these three keys and allow 8472/udp between the nodes.
+routingMode: native
+autoDirectNodeRoutes: true
+ipv4NativeRoutingCIDR: 10.244.0.0/16
+
+# No metrics listeners. By default the operator serves Prometheus metrics on 9963 and Envoy on 9964,
+# unauthenticated, on every address of the node they run on. Nothing collects them yet.
+operator:
+  prometheus:
+    enabled: false
+envoy:
+  prometheus:
+    enabled: false
+
+# Capabilities, from the guide. Talos doesn't let pods load kernel modules, so SYS_MODULE, which
+# the chart's default lists include, is left out of both.
+# SYSLOG: Cilium 1.19.0 added it to the chart's default agent list, and 1.20.2 has it. It lets the
+# agent read the kernel log, and kernel pointers when kptr_restrict=1, for troubleshooting. It is
+# left out, as in the guide's list; add it here if troubleshooting needs it.
+securityContext:
+  capabilities:
+    ciliumAgent:
+      - CHOWN
+      - KILL
+      - NET_ADMIN
+      - NET_RAW
+      - IPC_LOCK
+      - SYS_ADMIN
+      - SYS_RESOURCE
+      - DAC_OVERRIDE
+      - FOWNER
+      - SETGID
+      - SETUID
+    cleanCiliumState:
+      - NET_ADMIN
+      - SYS_ADMIN
+      - SYS_RESOURCE
+
+# Left unset on purpose:
+# - bpf.masquerade (default false): the guide says that, with Talos's default forwardKubeDNSToHost,
+#   it breaks CoreDNS.
+# - gatewayAPI and l2announcements: Phase 3 turns them on (issue 30).
+# - operator.replicas (default 2): the two operator replicas must run on different nodes, so one
+#   stays Pending until a second node joins. README.md checks readiness in two stages for this.
