@@ -397,10 +397,9 @@ refusal() {
   fi
 }
 
-# Isolate this process from the user's keys and configuration, check the tools, read metadata.env
-# and make the work directory.
+# Check the tools, read metadata.env and make the work directory. HOME is not set (see the end of
+# this file), so git and sops read no configuration or keys of the user's.
 prepare() {
-  unset HOME XDG_CONFIG_HOME SOPS_AGE_KEY SOPS_AGE_KEY_CMD SOPS_AGE_SSH_PRIVATE_KEY_FILE
   local tool
   for tool in git talosctl sops age-keygen yq python3 tar awk cmp sha256sum; do
     command -v "$tool" > /dev/null || { echo "$me: $tool is not on PATH" >&2; exit 2; }
@@ -693,4 +692,12 @@ main() {
   echo "$me: every check passed"
 }
 
-if test "${BASH_SOURCE[0]}" = "$0"; then main "$@"; fi
+# main runs in a new bash whose environment holds only PATH, TMPDIR and RUNNER_TEMP from the
+# caller's, so nothing else the caller exports reaches git, sops, talosctl or the block: not
+# GIT_DIR or GIT_INDEX_FILE, which git sets for its hooks and which would point the copy's git at
+# the caller's repository; not SOPS_*, which would steer sops; not HOME, BASH_ENV or an exported
+# function.
+if test "${BASH_SOURCE[0]}" = "$0"; then
+  exec env -i PATH="$PATH" ${TMPDIR:+"TMPDIR=$TMPDIR"} ${RUNNER_TEMP:+"RUNNER_TEMP=$RUNNER_TEMP"} \
+    "$BASH" -c 'source "$1"; main' "$me" "$0"
+fi

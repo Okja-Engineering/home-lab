@@ -149,11 +149,7 @@ check_render() {
 }
 
 main() {
-  unset HOME XDG_CONFIG_HOME XDG_CACHE_HOME XDG_DATA_HOME KUBECONFIG
-  local v tool
-  for v in $(compgen -e); do
-    case "$v" in HELM_*) unset "$v" ;; esac
-  done
+  local tool
   for tool in git helm yq sha256sum paste; do
     command -v "$tool" > /dev/null || { echo "$me: $tool is not on PATH" >&2; exit 2; }
   done
@@ -212,4 +208,11 @@ main() {
   echo "$me: every check passed"
 }
 
-if test "${BASH_SOURCE[0]}" = "$0"; then main "$@"; fi
+# main runs in a new bash whose environment holds only PATH, TMPDIR and RUNNER_TEMP from the
+# caller's, so nothing else the caller exports reaches git, helm or yq: not GIT_DIR or
+# GIT_WORK_TREE, which would make git find another checkout; not HELM_*, KUBECONFIG or HOME, which
+# would give helm the user's configuration; not BASH_ENV or an exported function.
+if test "${BASH_SOURCE[0]}" = "$0"; then
+  exec env -i PATH="$PATH" ${TMPDIR:+"TMPDIR=$TMPDIR"} ${RUNNER_TEMP:+"RUNNER_TEMP=$RUNNER_TEMP"} \
+    "$BASH" -c 'source "$1"; main' "$me" "$0"
+fi
