@@ -647,6 +647,18 @@ check_refusals() {
   cat "$work/truncated" > "$r/$d/secrets.sops.yaml"
   sgit -C "$r" commit -q --no-verify -a -m "truncate the bundle"
   refusal "a truncated committed bundle" "did not decrypt" "$r"
+  # A stub mv that fails to replace secrets/secrets.yaml, as mv does when the file can't be replaced
+  # (an immutable file, say). Every other move goes to the real mv.
+  fresh_case
+  mkdir -p "$work/stub-mv"
+  # shellcheck disable=SC2016
+  stub='#!/bin/sh\nfor a; do last="$a"; done\nif test "$last" = secrets/secrets.yaml; then\n'
+  stub+='  echo "mv: cannot replace secrets/secrets.yaml (a stub)" >&2\n  exit 1\nfi\nexec "%s" "$@"\n'
+  # shellcheck disable=SC2059
+  printf "$stub" "$(command -v mv)" > "$work/stub-mv/mv"
+  chmod 0755 "$work/stub-mv/mv"
+  refusal "secrets/secrets.yaml cannot be replaced (a stub mv fails)" "could not be replaced" "$r" \
+    PATH="$work/stub-mv:$PATH"
 
   # The block stops at a failing command: cp-02's config fails validation (a fixed hostname needs
   # auto: "off"), so cp-03's is never written.
