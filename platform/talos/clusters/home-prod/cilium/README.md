@@ -10,11 +10,12 @@ These steps live here until [issue 22](https://github.com/Okja-Engineering/home-
 ## What the Values Do
 
 - **IPv4 only** ([ADR-016](../../../../../docs/adr/016-use-ipv4-only-pod-and-service-networking-initially.md)). Pod addresses come from the range Kubernetes assigns to each node (`ipam.mode: kubernetes`), not from Cilium's default pool, 10.0.0.0/8, which contains the node network ([ADR-014](../../../../../docs/adr/014-rebase-address-plan-onto-10-0-0-0-24.md)).
-- **No kube-proxy.** Cilium replaces it, and reaches the API server through KubePrism, Talos's load balancer on every node at `localhost:7445`.
+- **No kube-proxy.** Cilium replaces it, and reaches the API server through KubePrism, Talos's load balancer on every node at `localhost:7445`. With kube-proxy replacement on, Cilium 1.20.2 also turns on socket load balancing, although the rendered ConfigMap says `bpf-lb-sock: "false"`.
 - **Talos's mounts.** Talos mounts cgroup2 and the BPF filesystem itself, so Cilium mounts neither. The chart then runs no privileged container.
 - **Native routing.** Pod traffic between nodes is routed on the one L2 segment, not tunnelled.
 - **Capabilities** are the Talos guide's lists: no `SYS_MODULE`, and no `SYSLOG`, which the chart adds by default.
 - **No metrics listeners.** The operator's and Envoy's Prometheus endpoints (9963 and 9964) are off.
+- **Ports on each node.** Reachable from the LAN: 4244/tcp (Hubble, TLS), 4240/tcp (cilium-health, on the node's own address) and, once Services exist, the NodePort range. On 127.0.0.1 only: 9234 (operator API), 9878 (Envoy health), 9879 (agent health), 9890 and 9891 (gops), and the agent's DNS proxy, on TCP and UDP at a port picked when the agent starts.
 - **Left at the chart's defaults:** `bpf.masquerade` (off), Gateway API and L2 announcements (off until Phase 3), and two operator replicas.
 
 ## Before You Start
