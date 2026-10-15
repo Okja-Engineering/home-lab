@@ -12,9 +12,10 @@
 #      cilium-ready). Each must appear once, between its markers, and its command must not appear in
 #      fenced code anywhere else: a copy would drift. No block may hold a "#", which zsh, with its
 #      default options, runs as a command.
-#   2. It runs the talos-generate-configs block as it is written: from docs/ with bash, then from the
-#      top of the copy with zsh (with bash where zsh is missing). The second run must give the same
-#      machine configs and a new talosconfig.
+#   2. It runs the talos-generate-configs block as it is written: from docs/ with bash, over a 0644
+#      decoy at secrets/secrets.yaml, which the bundle's plaintext must replace with mode 0600, and
+#      each node's CA must be the bundle's; then from the top of the copy with zsh (with bash where
+#      zsh is missing), which must give the same machine configs and a new talosconfig.
 #   3. It checks each node's config against metadata.env. It also runs the same checks on the
 #      generator's output without the patches, which must fail exactly the checks for the values the
 #      patches set.
