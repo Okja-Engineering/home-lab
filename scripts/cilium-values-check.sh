@@ -53,21 +53,23 @@ capabilities=(
 )
 
 # Every container in the render, with what it runs (its command and arguments, white space
-# collapsed) and the names of its environment variables, sorted. The agent and the operator take an
-# option from a flag or a CILIUM_ variable before the cilium-config ConfigMap that the checks below
-# read (viper's order), and the config container, which builds the agent's configuration, takes
-# its sources and the API server as flags in its command. So any other command, argument or
-# variable fails: extraArgs, extraEnv or daemon.configSources could otherwise undo a checked value.
-# ${BIN_PATH} and the operator's $(CILIUM_DEBUG) are not the shell's to expand: single quotes.
+# collapsed), the names of its environment variables, and its mounts (each as path<-volume kind),
+# sorted. The agent and the operator take an option from a flag or a CILIUM_ variable before the
+# cilium-config ConfigMap that the checks below read (viper's order); the config container, which
+# builds the agent's configuration, takes its sources and the API server as flags in its command;
+# and the agent reads that configuration from /tmp/cilium/config-map, in the tmp emptyDir. So any
+# other command, argument, variable or mount fails: extraArgs, extraEnv, daemon.configSources, or a
+# host directory mounted over the configuration (extraHostPathMounts, tmpVolume) could otherwise
+# undo a checked value. ${BIN_PATH} and $(CILIUM_DEBUG) are not the shell's to expand: single quotes.
 # shellcheck disable=SC2016
 commands=(
-  "cilium-envoy/cilium-envoy: /usr/bin/cilium-envoy-starter -- -c /var/run/cilium/envoy/bootstrap-config.json --base-id 0 --log-level info; CILIUM_K8S_NAMESPACE,K8S_NODE_NAME,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT"
-  'cilium-operator/cilium-operator: cilium-operator-generic --config-dir=/tmp/cilium/config-map --debug=$(CILIUM_DEBUG); CILIUM_DEBUG,CILIUM_K8S_NAMESPACE,K8S_NODE_NAME,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT'
-  'cilium/apply-sysctl-overwrites: bash -ec cp /usr/bin/cilium-sysctlfix /hostbin/cilium-sysctlfix; nsenter --mount=/hostproc/1/ns/mnt "${BIN_PATH}/cilium-sysctlfix"; rm /hostbin/cilium-sysctlfix; BIN_PATH'
-  "cilium/cilium-agent: cilium-agent --config-dir=/tmp/cilium/config-map; CILIUM_CLUSTERMESH_CONFIG,CILIUM_K8S_NAMESPACE,GOMEMLIMIT,K8S_NODE_NAME,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,KUBE_CLIENT_BACKOFF_BASE,KUBE_CLIENT_BACKOFF_DURATION"
-  "cilium/clean-cilium-state: /init-container.sh; CILIUM_ALL_STATE,CILIUM_BPF_STATE,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,WRITE_CNI_CONF_WHEN_READY"
-  "cilium/config: cilium-dbg build-config; CILIUM_K8S_NAMESPACE,K8S_NODE_NAME,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT"
-  "cilium/install-cni-binaries: /install-plugin.sh; "
+  "cilium-envoy/cilium-envoy: /usr/bin/cilium-envoy-starter -- -c /var/run/cilium/envoy/bootstrap-config.json --base-id 0 --log-level info; CILIUM_K8S_NAMESPACE,K8S_NODE_NAME,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT; /var/run/cilium/envoy/<-configMap,/var/run/cilium/envoy/artifacts<-hostPath,/var/run/cilium/envoy/sockets<-hostPath"
+  'cilium-operator/cilium-operator: cilium-operator-generic --config-dir=/tmp/cilium/config-map --debug=$(CILIUM_DEBUG); CILIUM_DEBUG,CILIUM_K8S_NAMESPACE,K8S_NODE_NAME,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT; /tmp/cilium/config-map<-configMap'
+  'cilium/apply-sysctl-overwrites: bash -ec cp /usr/bin/cilium-sysctlfix /hostbin/cilium-sysctlfix; nsenter --mount=/hostproc/1/ns/mnt "${BIN_PATH}/cilium-sysctlfix"; rm /hostbin/cilium-sysctlfix; BIN_PATH; /hostbin<-hostPath,/hostproc<-hostPath'
+  "cilium/cilium-agent: cilium-agent --config-dir=/tmp/cilium/config-map; CILIUM_CLUSTERMESH_CONFIG,CILIUM_K8S_NAMESPACE,GOMEMLIMIT,K8S_NODE_NAME,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,KUBE_CLIENT_BACKOFF_BASE,KUBE_CLIENT_BACKOFF_DURATION; /host/etc/cni/net.d<-hostPath,/host/proc/sys/kernel<-hostPath,/host/proc/sys/net<-hostPath,/lib/modules<-hostPath,/run/xtables.lock<-hostPath,/sys/fs/bpf<-hostPath,/sys/fs/cgroup<-hostPath,/tmp<-emptyDir,/var/lib/cilium/clustermesh<-projected,/var/lib/cilium/tls/hubble<-projected,/var/run/cilium/envoy/sockets<-hostPath,/var/run/cilium/netns<-hostPath,/var/run/cilium<-hostPath"
+  "cilium/clean-cilium-state: /init-container.sh; CILIUM_ALL_STATE,CILIUM_BPF_STATE,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,WRITE_CNI_CONF_WHEN_READY; /sys/fs/bpf<-hostPath,/sys/fs/cgroup<-hostPath,/var/run/cilium<-hostPath"
+  "cilium/config: cilium-dbg build-config; CILIUM_K8S_NAMESPACE,K8S_NODE_NAME,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT; /tmp<-emptyDir"
+  "cilium/install-cni-binaries: /install-plugin.sh; ; /host/opt/cni/bin<-hostPath"
 )
 
 # The checks the chart's defaults must fail, and no others: the values the file exists to set.
@@ -78,7 +80,7 @@ selftest_red=(
   "no metrics listener"
   "agent KUBERNETES_SERVICE_HOST" "agent KUBERNETES_SERVICE_PORT" "the API server only through KubePrism"
   "every container and its added capabilities, exactly"
-  "every container's command, arguments and environment variable names, exactly" "no privileged container"
+  "every container's command, arguments, environment variable names and mounts, exactly" "no privileged container"
 )
 
 mode=check # "check" prints ok and FAIL lines; "selftest" prints a SELFTEST-RED line per failed check
@@ -129,15 +131,16 @@ q() {
   printf '%s' "$out"
 }
 
-# Every container of every workload: Pods, the controllers' pod templates, and CronJobs'.
+# Every container of every workload: Pods, the controllers' pod templates, and CronJobs'. Each
+# carries its workload's name and its pod's volumes.
 # shellcheck disable=SC2016
 workload_containers='
   select(.kind == "Pod" or .kind == "DaemonSet" or .kind == "Deployment" or .kind == "StatefulSet" or
     .kind == "ReplicaSet" or .kind == "Job" or .kind == "CronJob") |
   .metadata.name as $w |
-  (.spec.jobTemplate.spec.template.spec // .spec.template.spec // .spec) |
-  ((.initContainers // []) + (.containers // []) + (.ephemeralContainers // [])) | .[] |
-  .workload = $w'
+  (.spec.jobTemplate.spec.template.spec // .spec.template.spec // .spec) as $pod |
+  (($pod.initContainers // []) + ($pod.containers // []) + ($pod.ephemeralContainers // [])) | .[] |
+  .workload = $w | .podVolumes = ($pod.volumes // [])'
 
 # check_render RENDER VALUES
 check_render() {
@@ -175,9 +178,12 @@ check_render() {
       join(" ")' "$r")"
   # The agent and the operator take the API server from a kubeconfig path, then from API server URLs,
   # and only when both are unset from KUBERNETES_SERVICE_HOST and _PORT, which the two checks above
-  # pin to KubePrism. Every source names itself in the render: k8s-kubeconfig-path and
+  # pin to KubePrism. Each source the render can give names itself: k8s-kubeconfig-path and
   # k8s-api-server-urls as cilium-config keys, flags or CILIUM_ variables, and kubeConfigPath's
-  # kube-config volume. Only the KubePrism pair may be found; finding it is the positive control.
+  # kube-config volume. Only the KubePrism pair may be found; finding it is the positive control. A
+  # directory mounted over the agent's configuration names nothing, so the exact container map
+  # below pins every mount. (Content outside the render, such as a CiliumNodeConfig object, is not
+  # a value this script can check.)
   eq "the API server only through KubePrism" "KUBERNETES_SERVICE_HOST KUBERNETES_SERVICE_PORT" \
     "$(q '[select(.kind != "Secret") | ((.. | select(tag == "!!map") | keys | .[]), (.. | select(tag == "!!str"))) |
       match("(?i)[^ \"]*(kubernetes[-_]service[-_](host|port)|k8s[-_]api[-_]server|kube[-_]?config)[^ \"]*"; "g") |
@@ -187,11 +193,14 @@ check_render() {
     "$(q "[$workload_containers | .workload + \"/\" + .name + \": \" +
       ([((.securityContext.capabilities.add // []) | sort | join(\",\")), \"none\"] | map(select(. != \"\")) | .[0])] |
       sort | join(\";\")" "$r")"
-  eq "every container's command, arguments and environment variable names, exactly" \
+  eq "every container's command, arguments, environment variable names and mounts, exactly" \
     "$(printf '%s\n' "${commands[@]}" | paste -s -d '|' -)" \
-    "$(q "[$workload_containers | .workload + \"/\" + .name + \": \" +
+    "$(q "[$workload_containers | .podVolumes as \$vols | .workload + \"/\" + .name + \": \" +
       (((.command // []) + (.args // [])) | join(\" \") | sub(\"\\s+\"; \" \") | sub(\" \$\"; \"\")) + \"; \" +
-      ([(.env // [])[] | .name] | sort | join(\",\"))] | sort | join(\"|\")" "$r")"
+      ([(.env // [])[] | .name] | sort | join(\",\")) + \"; \" +
+      ([(.volumeMounts // [])[] | .name as \$n | .mountPath + \"<-\" +
+        ([\$vols[] | select(.name == \$n) | keys | .[] | select(. != \"name\")] | join(\"+\"))] | sort | join(\",\"))] |
+      sort | join(\"|\")" "$r")"
   eq "no privileged container" 0 \
     "$(q "[$workload_containers | select(.securityContext.privileged == true)] | length" "$r")"
 
