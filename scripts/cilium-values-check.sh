@@ -42,7 +42,7 @@ selftest_red=(
   "values.yaml sets ipv4.enabled true" "values.yaml sets ipv6.enabled false"
   "ipam" "kube-proxy-replacement" "cgroup-root"
   "routing-mode" "auto-direct-node-routes" "ipv4-native-routing-cidr is POD_SUBNETS"
-  "no operator metrics listener" "no envoy metrics listener (9964)"
+  "no metrics listener"
   "agent KUBERNETES_SERVICE_HOST" "agent KUBERNETES_SERVICE_PORT"
   "every container and its added capabilities, exactly" "no privileged container"
 )
@@ -122,14 +122,14 @@ check_render() {
   eq "auto-direct-node-routes" true "$(q "$config | .[\"auto-direct-node-routes\"]" "$r")"
   eq "ipv4-native-routing-cidr is POD_SUBNETS" "$POD_SUBNETS" "$(q "$config | .[\"ipv4-native-routing-cidr\"]" "$r")"
 
-  # Absent, each with a positive control: the cilium-config checks above read the same ConfigMap,
-  # and the capability map below reads the same workloads.
-  eq "no operator metrics listener" 0 \
-    "$(q '[select(.kind == "ConfigMap" and .metadata.name == "cilium-config") | .data // {} | keys | .[] |
-      select(. == "operator-prometheus-serve-addr")] | length' "$r")"
-  eq "no envoy metrics listener (9964)" 0 \
-    "$(q '[select(.kind != "Secret") | .. | select(tag == "!!str" or tag == "!!int") | tostring |
-      select(test("(^|[^0-9])9964([^0-9]|$)"))] | length' "$r")"
+  # No metrics listener, on any port. Each one names Prometheus or metrics somewhere in the render:
+  # a serve address or an enable flag in cilium-config, a prometheus.io annotation, a port named
+  # prometheus or *-metrics, Envoy's metrics listener, or an argument. The only such name these
+  # values leave is cilium-config's metrics-sampling-interval, which is not a listener; finding it
+  # is the positive control, showing that the search reads every document.
+  eq "no metrics listener" metrics-sampling-interval \
+    "$(q '[select(.kind != "Secret") | ((.. | select(tag == "!!map") | keys | .[]), (.. | select(tag == "!!str"))) |
+      match("(?i)[^ \"]*(prometheus|metric)[^ \"]*"; "g") | .string] | unique | sort | join(" ")' "$r")"
 
   eq "agent KUBERNETES_SERVICE_HOST" localhost \
     "$(q '[select(.kind == "DaemonSet" and .metadata.name == "cilium") | .spec.template.spec.containers[] |
