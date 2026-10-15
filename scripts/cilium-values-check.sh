@@ -262,8 +262,11 @@ main() {
 # main runs in a new bash whose environment holds only PATH, TMPDIR and RUNNER_TEMP from the
 # caller's, so nothing else the caller exports reaches git, helm or yq: not GIT_DIR or
 # GIT_WORK_TREE, which would make git find another checkout; not HELM_*, KUBECONFIG or HOME, which
-# would give helm the user's configuration; not BASH_ENV or an exported function.
+# would give helm the user's configuration; and the new bash gets no BASH_ENV or exported function.
+# It sources this file by its absolute path: a bare name, as when the script is run as
+# "bash cilium-values-check.sh", would make source search PATH first.
 if test "${BASH_SOURCE[0]}" = "$0"; then
+  case "$0" in /*) self="$0" ;; *) self="$PWD/$0" ;; esac
   exec env -i PATH="$PATH" ${TMPDIR:+"TMPDIR=$TMPDIR"} ${RUNNER_TEMP:+"RUNNER_TEMP=$RUNNER_TEMP"} \
-    "$BASH" -c 'source "$1"; main' "$me" "$0"
+    "$BASH" -c 'source "$1"; main' "$me" "$self"
 fi

@@ -769,9 +769,11 @@ main() {
 # main runs in a new bash whose environment holds only PATH, TMPDIR and RUNNER_TEMP from the
 # caller's, so nothing else the caller exports reaches git, sops, talosctl or the block: not
 # GIT_DIR or GIT_INDEX_FILE, which git sets for its hooks and which would point the copy's git at
-# the caller's repository; not SOPS_*, which would steer sops; not HOME, BASH_ENV or an exported
-# function.
+# the caller's repository; not SOPS_*, which would steer sops; and the new bash gets no HOME,
+# BASH_ENV or exported function. It sources this file by its absolute path: a bare name, as when
+# the script is run as "bash talos-config-check.sh", would make source search PATH first.
 if test "${BASH_SOURCE[0]}" = "$0"; then
+  case "$0" in /*) self="$0" ;; *) self="$PWD/$0" ;; esac
   exec env -i PATH="$PATH" ${TMPDIR:+"TMPDIR=$TMPDIR"} ${RUNNER_TEMP:+"RUNNER_TEMP=$RUNNER_TEMP"} \
-    "$BASH" -c 'source "$1"; main' "$me" "$0"
+    "$BASH" -c 'source "$1"; main' "$me" "$self"
 fi
