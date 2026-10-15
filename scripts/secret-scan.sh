@@ -13,6 +13,14 @@
 # reading something where there was something to read (the three checks at
 # the end). 1 when it found something or any of that failed. 2 when the script
 # was called wrongly or gitleaks is not on PATH.
+#
+# It can exit 0 in one place only: its last line. A shell reads and runs a
+# script one command at a time, so a run that gets there has run every command
+# above it, and an error that stops a shell (a syntax error, an unset
+# variable) would have stopped it first, with a non-zero status. There is no
+# EXIT trap: under macOS /bin/sh (bash 3.2), a shell that stops on such an
+# error while an EXIT trap is set exits 0, so the scan would pass whatever it
+# found.
 set -eu
 
 usage() {
@@ -102,8 +110,10 @@ if ! command -v gitleaks >/dev/null; then
   exit 2
 fi
 
+# gitleaks' log messages, for the checks below; its findings go to standard
+# output. The script removes the file at the end, so a run that stops early
+# can leave it behind.
 log=$(mktemp)
-trap 'rm -f "$log"' EXIT
 
 failed=0
 for config in $configs; do
@@ -144,4 +154,5 @@ for config in $configs; do
   fi
 done
 
+rm -f "$log"
 exit "$failed"
