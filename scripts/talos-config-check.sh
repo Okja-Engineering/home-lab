@@ -260,15 +260,17 @@ check_sources() {
   eq "no other patch sets the subnets" 0 "$(q '[select(.kind == "KubeNetworkConfig")] | length' "${others[@]}")"
 }
 
-# The single-copy rule. Fenced code is CommonMark's: a run of 3 or more ` or ~ (behind any number of
-# > blockquote markers and any indentation) opens a fence; a ` run whose info string holds a ` is
-# not a fence. The fence is closed, as CommonMark closes it, by a run of the same character at least
-# as long, with nothing after it but spaces, behind the opening fence's > markers and indented at
-# most 3 columns more than the opening fence (a tab reaches the next multiple of 4; counting from
-# the opening fence keeps a fence in a list item working). A line with fewer > markers ends the
-# blockquote, and the fence with it. Indented code blocks are not checked. A marker is a whole line
-# at column 0; a marker-shaped line anywhere else fails. Writes each block's code to
-# $D12_OUT/<name>.sh, prints ok or FAIL per block, and exits 1 when anything failed.
+# The single-copy rule. Fenced code follows CommonMark: a run of 3 or more ` or ~ (behind any
+# number of > blockquote markers and any indentation) opens a fence; a ` run whose info string holds
+# a ` is not a fence. The fence is closed by a run of the same character at least as long, with
+# nothing after it but spaces, behind the opening fence's > markers and indented at most 3 columns
+# more than the opening fence (a tab reaches the next multiple of 4; counting from the opening fence
+# keeps a fence in a list item working). A line with fewer > markers ends the blockquote, and the
+# fence with it. List items, indented code and HTML blocks are not tracked, so a fence that one of
+# them opens or ends early can differ from CommonMark's; the rule guards against an accidental second
+# copy, not a hidden one. Indented code blocks are not checked. A marker is a whole line at column
+# 0; a marker-shaped line anywhere else fails. Writes each block's code to $D12_OUT/<name>.sh,
+# prints ok or FAIL per block, and exits 1 when anything failed.
 # shellcheck disable=SC2016
 d12_awk='
 function bad(msg) { print "FAIL single copy: " msg; failed = 1 }
