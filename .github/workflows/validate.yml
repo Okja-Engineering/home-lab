@@ -146,9 +146,10 @@ jobs:
           fi
           echo "ok: no committed secrets.sops.yaml is modified, deleted or renamed"
 
-      # The recipients script runs under sh. On macOS, /bin/sh exits 0 on a syntax error that comes
-      # after the script's EXIT trap, so a broken edit could pass there. Check the whole file's
-      # syntax here, with sh (dash on this runner) and with dash by name; both exit 2 on an error.
+      # The recipients script runs under sh, which reads a script one command at a time: a syntax
+      # error shows only when a run reaches it. A run can stop or exit before then, and under macOS's
+      # /bin/sh (bash 3.2) an EXIT trap turns the error into exit 0. So parse the whole file here, with
+      # sh (dash on this runner) and with dash by name; both exit 2 on a syntax error anywhere in it.
       - name: Check the recipients script's syntax
         run: |
           echo "sh is $(readlink -f /bin/sh)"
