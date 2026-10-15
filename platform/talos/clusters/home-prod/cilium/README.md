@@ -22,12 +22,12 @@ These steps live here until [issue 22](https://github.com/Okja-Engineering/home-
 - **Tools.** On the workstation, as well as `talosctl` and `kubectl`: `brew install helm cilium-cli`.
 - **When.** Install Cilium on cp-01 straight after `talosctl bootstrap` and fetching the kubeconfig, as the Talos guide does. The guide says Talos then waits at boot phase 18/19 with `retrying error: node not ready`, which is expected, and that there are about 10 minutes to install Cilium before the node retries.
 - **Expected until Cilium runs:** every node reports `NotReady`, and CoreDNS stays `Pending`.
-- **The kubeconfig.** `KUBECONFIG` must name the one kubeconfig file fetched after bootstrap, by its full path, and that file's current context must point at `CLUSTER_ENDPOINT` from `metadata.env`. Both steps stop otherwise.
+- **The kubeconfig.** `KUBECONFIG` must name the one kubeconfig file fetched after bootstrap, by its full path, and that file's current context must point at `CLUSTER_ENDPOINT` from `metadata.env`. Both steps stop otherwise. They export `KUBECONFIG` after checking it, so helm, kubectl and cilium all use that file, even if it wasn't exported.
 - **Not `talosctl health`.** With Talos's default CNI disabled, `talosctl health` skips its node-Ready and CoreDNS checks, so a pass says nothing about Cilium. It checks etcd, the control-plane pods, apid and the kubelet, and can follow. Cilium's readiness is checked in two stages, below.
 
 ## Install Cilium on cp-01
 
-Paste this from anywhere inside the repository. It installs only committed files: it reads `metadata.env` and `values.yaml` from the current commit, and stops, installing nothing, if either has uncommitted changes. It also stops if a variable whose name starts with `HELM_KUBE` is set, if `KUBECONFIG` isn't one file, or if the current context doesn't point at `CLUSTER_ENDPOINT`. It downloads the chart, checks it against `CILIUM_CHART_SHA256`, and installs from the checked file. Then it waits for the agent and Envoy to roll out, for the operator to be available and for every node to be Ready, and lists the nodes.
+Paste this from anywhere inside the repository. It installs only committed files: it reads `metadata.env` and `values.yaml` from the current commit, and stops, installing nothing, if either has uncommitted changes. It also stops if any variable whose name starts with `HELM_` is set, if `KUBECONFIG` isn't one file, or if the current context doesn't point at `CLUSTER_ENDPOINT`. helm reads `HELM_` variables, and they can change where and how it installs: `HELM_KUBEAPISERVER` sends it to another API server, `HELM_DEBUG` prints the rendered manifest with the Cilium CA's private key, and `HELM_DRIVER` moves the release record. It downloads the chart, checks it against `CILIUM_CHART_SHA256`, and installs from the checked file. Then it waits for the agent and Envoy to roll out, for the operator to be available and for every node to be Ready, and lists the nodes.
 
 <!-- cilium-install:begin -->
 ```bash
@@ -44,14 +44,16 @@ Paste this from anywhere inside the repository. It installs only committed files
     echo "Stopping: metadata.env or cilium/values.yaml has uncommitted changes. Cilium is installed only from committed files. Nothing was installed." >&2
     exit 1
   fi
-  if env | grep -q '^HELM_KUBE'; then
-    echo "Stopping: a HELM_KUBE variable is set, and helm would follow it instead of the checked context. Unset it, then paste again. Nothing was installed." >&2
+  h="$(env | awk -F= '/^HELM_/ { s = s " " $1 } END { print s }')"
+  if test -n "$h"; then
+    echo "Stopping: helm would read these variables:$h. Unset them, then paste again. Nothing was installed." >&2
     exit 1
   fi
   if test -z "${KUBECONFIG:-}" || ! test -f "$KUBECONFIG"; then
     echo "Stopping: KUBECONFIG must name the one kubeconfig file fetched after bootstrap. Nothing was installed." >&2
     exit 1
   fi
+  export KUBECONFIG
   t="$(mktemp -d)"
   git -C "$top" archive -o "$t/in.tar" "HEAD:$d" metadata.env cilium/values.yaml
   tar -x -C "$t" -f "$t/in.tar"
@@ -108,6 +110,7 @@ Once cp-02 and cp-03 have joined, paste this. It changes nothing, and reads `met
     echo "Stopping: CLUSTER_ENDPOINT is empty, or KUBECONFIG does not name the kubeconfig file fetched after bootstrap. Nothing was checked." >&2
     exit 1
   fi
+  export KUBECONFIG
   ctx="$(kubectl config current-context)" || ctx=""
   server="$(kubectl config view --minify --context "$ctx" -o 'jsonpath={.clusters[0].cluster.server}')" || server=""
   if test -z "$ctx" || test -z "$server" || test "$server" != "$CLUSTER_ENDPOINT"; then
