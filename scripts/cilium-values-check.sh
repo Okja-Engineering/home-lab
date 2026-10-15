@@ -60,8 +60,9 @@ capabilities=(
 )
 
 # Every container in the render, with what it runs (its command and arguments, white space
-# collapsed), the names of its environment variables, and its mounts (each as path<-volume kind),
-# sorted. The agent and the operator take an option from a flag or a CILIUM_ variable before the
+# collapsed), the names of its environment variables, and its mounts (each as path<-volume
+# kind:source, the source being the ConfigMap or Secret name, the projected sources or the host
+# path), sorted. The agent and the operator take an option from a flag or a CILIUM_ variable before the
 # cilium-config ConfigMap that the checks below read (viper's order); the config container, which
 # builds the agent's configuration, takes its sources and the API server as flags in its command;
 # and the agent reads that configuration from /tmp/cilium/config-map, in the tmp emptyDir. So any
@@ -70,13 +71,13 @@ capabilities=(
 # undo a checked value. ${BIN_PATH} and $(CILIUM_DEBUG) are not the shell's to expand: single quotes.
 # shellcheck disable=SC2016
 commands=(
-  "cilium-envoy/cilium-envoy: /usr/bin/cilium-envoy-starter -- -c /var/run/cilium/envoy/bootstrap-config.json --base-id 0 --log-level info; CILIUM_K8S_NAMESPACE,K8S_NODE_NAME,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT; /var/run/cilium/envoy/<-configMap,/var/run/cilium/envoy/artifacts<-hostPath,/var/run/cilium/envoy/sockets<-hostPath"
-  'cilium-operator/cilium-operator: cilium-operator-generic --config-dir=/tmp/cilium/config-map --debug=$(CILIUM_DEBUG); CILIUM_DEBUG,CILIUM_K8S_NAMESPACE,K8S_NODE_NAME,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT; /tmp/cilium/config-map<-configMap'
-  'cilium/apply-sysctl-overwrites: bash -ec cp /usr/bin/cilium-sysctlfix /hostbin/cilium-sysctlfix; nsenter --mount=/hostproc/1/ns/mnt "${BIN_PATH}/cilium-sysctlfix"; rm /hostbin/cilium-sysctlfix; BIN_PATH; /hostbin<-hostPath,/hostproc<-hostPath'
-  "cilium/cilium-agent: cilium-agent --config-dir=/tmp/cilium/config-map; CILIUM_CLUSTERMESH_CONFIG,CILIUM_K8S_NAMESPACE,GOMEMLIMIT,K8S_NODE_NAME,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,KUBE_CLIENT_BACKOFF_BASE,KUBE_CLIENT_BACKOFF_DURATION; /host/etc/cni/net.d<-hostPath,/host/proc/sys/kernel<-hostPath,/host/proc/sys/net<-hostPath,/lib/modules<-hostPath,/run/xtables.lock<-hostPath,/sys/fs/bpf<-hostPath,/sys/fs/cgroup<-hostPath,/tmp<-emptyDir,/var/lib/cilium/clustermesh<-projected,/var/lib/cilium/tls/hubble<-projected,/var/run/cilium/envoy/sockets<-hostPath,/var/run/cilium/netns<-hostPath,/var/run/cilium<-hostPath"
-  "cilium/clean-cilium-state: /init-container.sh; CILIUM_ALL_STATE,CILIUM_BPF_STATE,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,WRITE_CNI_CONF_WHEN_READY; /sys/fs/bpf<-hostPath,/sys/fs/cgroup<-hostPath,/var/run/cilium<-hostPath"
+  "cilium-envoy/cilium-envoy: /usr/bin/cilium-envoy-starter -- -c /var/run/cilium/envoy/bootstrap-config.json --base-id 0 --log-level info; CILIUM_K8S_NAMESPACE,K8S_NODE_NAME,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT; /var/run/cilium/envoy/<-configMap:cilium-envoy-config,/var/run/cilium/envoy/artifacts<-hostPath:/var/run/cilium/envoy/artifacts,/var/run/cilium/envoy/sockets<-hostPath:/var/run/cilium/envoy/sockets"
+  'cilium-operator/cilium-operator: cilium-operator-generic --config-dir=/tmp/cilium/config-map --debug=$(CILIUM_DEBUG); CILIUM_DEBUG,CILIUM_K8S_NAMESPACE,K8S_NODE_NAME,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT; /tmp/cilium/config-map<-configMap:cilium-config'
+  'cilium/apply-sysctl-overwrites: bash -ec cp /usr/bin/cilium-sysctlfix /hostbin/cilium-sysctlfix; nsenter --mount=/hostproc/1/ns/mnt "${BIN_PATH}/cilium-sysctlfix"; rm /hostbin/cilium-sysctlfix; BIN_PATH; /hostbin<-hostPath:/opt/cni/bin,/hostproc<-hostPath:/proc'
+  "cilium/cilium-agent: cilium-agent --config-dir=/tmp/cilium/config-map; CILIUM_CLUSTERMESH_CONFIG,CILIUM_K8S_NAMESPACE,GOMEMLIMIT,K8S_NODE_NAME,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,KUBE_CLIENT_BACKOFF_BASE,KUBE_CLIENT_BACKOFF_DURATION; /host/etc/cni/net.d<-hostPath:/etc/cni/net.d,/host/proc/sys/kernel<-hostPath:/proc/sys/kernel,/host/proc/sys/net<-hostPath:/proc/sys/net,/lib/modules<-hostPath:/lib/modules,/run/xtables.lock<-hostPath:/run/xtables.lock,/sys/fs/bpf<-hostPath:/sys/fs/bpf,/sys/fs/cgroup<-hostPath:/sys/fs/cgroup,/tmp<-emptyDir,/var/lib/cilium/clustermesh<-projected:cilium-clustermesh+clustermesh-apiserver-remote-cert+clustermesh-apiserver-local-cert,/var/lib/cilium/tls/hubble<-projected:hubble-server-certs,/var/run/cilium/envoy/sockets<-hostPath:/var/run/cilium/envoy/sockets,/var/run/cilium/netns<-hostPath:/var/run/netns,/var/run/cilium<-hostPath:/var/run/cilium"
+  "cilium/clean-cilium-state: /init-container.sh; CILIUM_ALL_STATE,CILIUM_BPF_STATE,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,WRITE_CNI_CONF_WHEN_READY; /sys/fs/bpf<-hostPath:/sys/fs/bpf,/sys/fs/cgroup<-hostPath:/sys/fs/cgroup,/var/run/cilium<-hostPath:/var/run/cilium"
   "cilium/config: cilium-dbg build-config; CILIUM_K8S_NAMESPACE,K8S_NODE_NAME,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT; /tmp<-emptyDir"
-  "cilium/install-cni-binaries: /install-plugin.sh; ; /host/opt/cni/bin<-hostPath"
+  "cilium/install-cni-binaries: /install-plugin.sh; ; /host/opt/cni/bin<-hostPath:/opt/cni/bin"
 )
 
 # The checks the chart's defaults must fail, and no others: the values the file exists to set.
@@ -206,7 +207,10 @@ check_render() {
       (((.command // []) + (.args // [])) | join(\" \") | sub(\"\\s+\"; \" \") | sub(\" \$\"; \"\")) + \"; \" +
       ([(.env // [])[] | .name] | sort | join(\",\")) + \"; \" +
       ([(.volumeMounts // [])[] | .name as \$n | .mountPath + \"<-\" +
-        ([\$vols[] | select(.name == \$n) | keys | .[] | select(. != \"name\")] | join(\"+\"))] | sort | join(\",\"))] |
+        ([\$vols[] | select(.name == \$n) | ([keys | .[] | select(. != \"name\")] | join(\"+\")) as \$k |
+          (.configMap.name // .secret.secretName // .hostPath.path //
+            ([.projected.sources[]? | (.configMap.name // .secret.name // \"\")] | join(\"+\"))) as \$s |
+          \$k + (if \$s == \"\" then \"\" else \":\" + \$s end)] | join(\"+\"))] | sort | join(\",\"))] |
       sort | join(\"|\")" "$r")"
   eq "no privileged container" 0 \
     "$(q "[$workload_containers | select(.securityContext.privileged == true)] | length" "$r")"
