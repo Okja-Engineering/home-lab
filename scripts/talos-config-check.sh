@@ -316,7 +316,8 @@ END {
 # Run the extracted block the way a person pastes it: its text on the shell's standard input.
 # run_block DIR [NAME=VALUE...] -- SHELL [ARG...]; the output goes to $work/block.out.
 # HOME is an empty directory in the work directory, not unset: zsh sets an unset HOME back to the
-# user's home, where git and sops would read the user's own configuration and keys.
+# user's home, where git and sops would read the user's own configuration and keys. HISTFILE is in
+# the work directory too, so an interactive shell never writes the user's history file.
 run_block() {
   local dir="$1"
   local -a envs=()
@@ -326,8 +327,8 @@ run_block() {
     shift
   done
   shift
-  (cd "$dir" && env HOME="$work/home" TMPDIR="$work/blocktmp" GIT_CEILING_DIRECTORIES="$work" "${envs[@]}" \
-    "$@" < "$block") > "$work/block.out" 2>&1
+  (cd "$dir" && env HOME="$work/home" HISTFILE="$work/home/history" TMPDIR="$work/blocktmp" \
+    GIT_CEILING_DIRECTORIES="$work" "${envs[@]}" "$@" < "$block") > "$work/block.out" 2>&1
 }
 
 # The block's output, indented. zsh ends without a newline and writes carriage returns; drop them.
@@ -520,8 +521,9 @@ run_twice() {
   local -a shell=(bash) shell_env=()
   if command -v zsh > /dev/null; then
     # shellcheck disable=SC2016
-    if test "$(env HOME="$work/home" zsh -f -c 'printf %s "$HOME"')" != "$work/home"; then
-      die "run 2: zsh does not keep the work directory's HOME, so it was not run"
+    if test "$(env HOME="$work/home" HISTFILE="$work/home/history" zsh -f -c 'printf "%s %s" "$HOME" "$HISTFILE"')" \
+      != "$work/home $work/home/history"; then
+      die "run 2: zsh does not keep the work directory's HOME and HISTFILE, so it was not run"
     fi
     shell=(zsh -f -i)
     # Empty prompts keep zsh's interactive prompts, which show the host name, out of the output.
