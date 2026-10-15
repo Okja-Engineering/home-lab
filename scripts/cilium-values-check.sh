@@ -37,6 +37,22 @@ capabilities=(
   "cilium/install-cni-binaries: none"
 )
 
+# Every container in the render, with its arguments and the names of its environment variables,
+# sorted. The agent and the operator take an option from a flag or a CILIUM_ variable before the
+# cilium-config ConfigMap that the checks below read (viper's order), so any other argument or
+# variable fails: extraArgs or extraEnv could otherwise undo a checked value.
+# The operator's $(CILIUM_DEBUG) is Kubernetes's syntax, not the shell's: single quotes keep it.
+# shellcheck disable=SC2016
+arguments=(
+  "cilium-envoy/cilium-envoy: -- -c /var/run/cilium/envoy/bootstrap-config.json --base-id 0 --log-level info; CILIUM_K8S_NAMESPACE,K8S_NODE_NAME,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT"
+  'cilium-operator/cilium-operator: --config-dir=/tmp/cilium/config-map --debug=$(CILIUM_DEBUG); CILIUM_DEBUG,CILIUM_K8S_NAMESPACE,K8S_NODE_NAME,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT'
+  "cilium/apply-sysctl-overwrites: ; BIN_PATH"
+  "cilium/cilium-agent: --config-dir=/tmp/cilium/config-map; CILIUM_CLUSTERMESH_CONFIG,CILIUM_K8S_NAMESPACE,GOMEMLIMIT,K8S_NODE_NAME,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,KUBE_CLIENT_BACKOFF_BASE,KUBE_CLIENT_BACKOFF_DURATION"
+  "cilium/clean-cilium-state: ; CILIUM_ALL_STATE,CILIUM_BPF_STATE,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,WRITE_CNI_CONF_WHEN_READY"
+  "cilium/config: ; CILIUM_K8S_NAMESPACE,K8S_NODE_NAME,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT"
+  "cilium/install-cni-binaries: ; "
+)
+
 # The checks the chart's defaults must fail, and no others: the values the file exists to set.
 selftest_red=(
   "values.yaml sets ipv4.enabled true" "values.yaml sets ipv6.enabled false"
@@ -44,7 +60,8 @@ selftest_red=(
   "routing-mode" "auto-direct-node-routes" "ipv4-native-routing-cidr is POD_SUBNETS"
   "no metrics listener"
   "agent KUBERNETES_SERVICE_HOST" "agent KUBERNETES_SERVICE_PORT"
-  "every container and its added capabilities, exactly" "no privileged container"
+  "every container and its added capabilities, exactly"
+  "every container's arguments and environment variable names, exactly" "no privileged container"
 )
 
 mode=check # "check" prints ok and FAIL lines; "selftest" prints a SELFTEST-RED line per failed check
@@ -144,6 +161,10 @@ check_render() {
     "$(q "[$workload_containers | .workload + \"/\" + .name + \": \" +
       ([((.securityContext.capabilities.add // []) | sort | join(\",\")), \"none\"] | map(select(. != \"\")) | .[0])] |
       sort | join(\";\")" "$r")"
+  eq "every container's arguments and environment variable names, exactly" \
+    "$(printf '%s\n' "${arguments[@]}" | paste -s -d '|' -)" \
+    "$(q "[$workload_containers | .workload + \"/\" + .name + \": \" + ((.args // []) | join(\" \")) + \"; \" +
+      ([(.env // [])[] | .name] | sort | join(\",\"))] | sort | join(\"|\")" "$r")"
   eq "no privileged container" 0 \
     "$(q "[$workload_containers | select(.securityContext.privileged == true)] | length" "$r")"
 
