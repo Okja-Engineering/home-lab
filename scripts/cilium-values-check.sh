@@ -37,20 +37,22 @@ capabilities=(
   "cilium/install-cni-binaries: none"
 )
 
-# Every container in the render, with its arguments and the names of its environment variables,
-# sorted. The agent and the operator take an option from a flag or a CILIUM_ variable before the
-# cilium-config ConfigMap that the checks below read (viper's order), so any other argument or
-# variable fails: extraArgs or extraEnv could otherwise undo a checked value.
-# The operator's $(CILIUM_DEBUG) is Kubernetes's syntax, not the shell's: single quotes keep it.
+# Every container in the render, with what it runs (its command and arguments, white space
+# collapsed) and the names of its environment variables, sorted. The agent and the operator take an
+# option from a flag or a CILIUM_ variable before the cilium-config ConfigMap that the checks below
+# read (viper's order), and the config container, which builds the agent's configuration, takes
+# its sources and the API server as flags in its command. So any other command, argument or
+# variable fails: extraArgs, extraEnv or daemon.configSources could otherwise undo a checked value.
+# ${BIN_PATH} and the operator's $(CILIUM_DEBUG) are not the shell's to expand: single quotes.
 # shellcheck disable=SC2016
-arguments=(
-  "cilium-envoy/cilium-envoy: -- -c /var/run/cilium/envoy/bootstrap-config.json --base-id 0 --log-level info; CILIUM_K8S_NAMESPACE,K8S_NODE_NAME,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT"
-  'cilium-operator/cilium-operator: --config-dir=/tmp/cilium/config-map --debug=$(CILIUM_DEBUG); CILIUM_DEBUG,CILIUM_K8S_NAMESPACE,K8S_NODE_NAME,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT'
-  "cilium/apply-sysctl-overwrites: ; BIN_PATH"
-  "cilium/cilium-agent: --config-dir=/tmp/cilium/config-map; CILIUM_CLUSTERMESH_CONFIG,CILIUM_K8S_NAMESPACE,GOMEMLIMIT,K8S_NODE_NAME,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,KUBE_CLIENT_BACKOFF_BASE,KUBE_CLIENT_BACKOFF_DURATION"
-  "cilium/clean-cilium-state: ; CILIUM_ALL_STATE,CILIUM_BPF_STATE,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,WRITE_CNI_CONF_WHEN_READY"
-  "cilium/config: ; CILIUM_K8S_NAMESPACE,K8S_NODE_NAME,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT"
-  "cilium/install-cni-binaries: ; "
+commands=(
+  "cilium-envoy/cilium-envoy: /usr/bin/cilium-envoy-starter -- -c /var/run/cilium/envoy/bootstrap-config.json --base-id 0 --log-level info; CILIUM_K8S_NAMESPACE,K8S_NODE_NAME,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT"
+  'cilium-operator/cilium-operator: cilium-operator-generic --config-dir=/tmp/cilium/config-map --debug=$(CILIUM_DEBUG); CILIUM_DEBUG,CILIUM_K8S_NAMESPACE,K8S_NODE_NAME,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT'
+  'cilium/apply-sysctl-overwrites: bash -ec cp /usr/bin/cilium-sysctlfix /hostbin/cilium-sysctlfix; nsenter --mount=/hostproc/1/ns/mnt "${BIN_PATH}/cilium-sysctlfix"; rm /hostbin/cilium-sysctlfix; BIN_PATH'
+  "cilium/cilium-agent: cilium-agent --config-dir=/tmp/cilium/config-map; CILIUM_CLUSTERMESH_CONFIG,CILIUM_K8S_NAMESPACE,GOMEMLIMIT,K8S_NODE_NAME,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,KUBE_CLIENT_BACKOFF_BASE,KUBE_CLIENT_BACKOFF_DURATION"
+  "cilium/clean-cilium-state: /init-container.sh; CILIUM_ALL_STATE,CILIUM_BPF_STATE,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT,WRITE_CNI_CONF_WHEN_READY"
+  "cilium/config: cilium-dbg build-config; CILIUM_K8S_NAMESPACE,K8S_NODE_NAME,KUBERNETES_SERVICE_HOST,KUBERNETES_SERVICE_PORT"
+  "cilium/install-cni-binaries: /install-plugin.sh; "
 )
 
 # The checks the chart's defaults must fail, and no others: the values the file exists to set.
@@ -59,9 +61,9 @@ selftest_red=(
   "ipam" "kube-proxy-replacement" "cgroup-root"
   "routing-mode" "auto-direct-node-routes" "ipv4-native-routing-cidr is POD_SUBNETS"
   "no metrics listener"
-  "agent KUBERNETES_SERVICE_HOST" "agent KUBERNETES_SERVICE_PORT"
+  "agent KUBERNETES_SERVICE_HOST" "agent KUBERNETES_SERVICE_PORT" "the API server only through KubePrism"
   "every container and its added capabilities, exactly"
-  "every container's arguments and environment variable names, exactly" "no privileged container"
+  "every container's command, arguments and environment variable names, exactly" "no privileged container"
 )
 
 mode=check # "check" prints ok and FAIL lines; "selftest" prints a SELFTEST-RED line per failed check
@@ -156,14 +158,24 @@ check_render() {
     "$(q '[select(.kind == "DaemonSet" and .metadata.name == "cilium") | .spec.template.spec.containers[] |
       select(.name == "cilium-agent") | .env // [] | .[] | select(.name == "KUBERNETES_SERVICE_PORT") | .value] |
       join(" ")' "$r")"
+  # The agent and the operator take the API server from a kubeconfig path, then from API server URLs,
+  # and only when both are unset from KUBERNETES_SERVICE_HOST and _PORT, which the two checks above
+  # pin to KubePrism. Every source names itself in the render: k8s-kubeconfig-path and
+  # k8s-api-server-urls as cilium-config keys, flags or CILIUM_ variables, and kubeConfigPath's
+  # kube-config volume. Only the KubePrism pair may be found; finding it is the positive control.
+  eq "the API server only through KubePrism" "KUBERNETES_SERVICE_HOST KUBERNETES_SERVICE_PORT" \
+    "$(q '[select(.kind != "Secret") | ((.. | select(tag == "!!map") | keys | .[]), (.. | select(tag == "!!str"))) |
+      match("(?i)[^ \"]*(kubernetes[-_]service[-_](host|port)|k8s[-_]api[-_]server|kube[-_]?config)[^ \"]*"; "g") |
+      .string] | unique | sort | join(" ")' "$r")"
 
   eq "every container and its added capabilities, exactly" "$(printf '%s\n' "${capabilities[@]}" | paste -s -d ';' -)" \
     "$(q "[$workload_containers | .workload + \"/\" + .name + \": \" +
       ([((.securityContext.capabilities.add // []) | sort | join(\",\")), \"none\"] | map(select(. != \"\")) | .[0])] |
       sort | join(\";\")" "$r")"
-  eq "every container's arguments and environment variable names, exactly" \
-    "$(printf '%s\n' "${arguments[@]}" | paste -s -d '|' -)" \
-    "$(q "[$workload_containers | .workload + \"/\" + .name + \": \" + ((.args // []) | join(\" \")) + \"; \" +
+  eq "every container's command, arguments and environment variable names, exactly" \
+    "$(printf '%s\n' "${commands[@]}" | paste -s -d '|' -)" \
+    "$(q "[$workload_containers | .workload + \"/\" + .name + \": \" +
+      (((.command // []) + (.args // [])) | join(\" \") | sub(\"\\s+\"; \" \") | sub(\" \$\"; \"\")) + \"; \" +
       ([(.env // [])[] | .name] | sort | join(\",\"))] | sort | join(\"|\")" "$r")"
   eq "no privileged container" 0 \
     "$(q "[$workload_containers | select(.securityContext.privileged == true)] | length" "$r")"
