@@ -47,11 +47,25 @@ selftest_red=(
 mode=check # "check" prints ok and FAIL lines; "selftest" prints a SELFTEST-RED line per failed check
 red=()     # the names of the checks that failed in the current mode
 failures=0
+finished=no # set by every deliberate exit; the EXIT trap reports any other
 
 ok() { echo "ok $*"; }
 fail() {
   echo "FAIL $*"
   failures=$((failures + 1))
+}
+# die MESSAGE: a FAIL line, then stop; what follows depends on this step.
+die() {
+  fail "$@"
+  finished=yes
+  exit 1
+}
+# The EXIT trap: remove the work directory. set -e stops the script at a command that fails
+# unexpectedly; say so, so that such a stop is never silent.
+on_exit() {
+  local rc=$?
+  rm -rf "$work"
+  if test "$rc" != 0 && test "$finished" != yes; then echo "$me: stopped early (status $rc)" >&2; fi
 }
 
 # eq NAME EXPECTED GOT: the check passes only when EXPECTED is neither empty nor null and GOT equals
@@ -154,22 +168,20 @@ main() {
     exit 1
   fi
   work="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/cilium-values.XXXXXX")"
-  trap 'rm -rf "$work"' EXIT
+  trap on_exit EXIT
   export HELM_CACHE_HOME="$work/helm/cache" HELM_CONFIG_HOME="$work/helm/config" HELM_DATA_HOME="$work/helm/data"
 
   local chart="$work/cilium-$CILIUM_VERSION.tgz"
   helm pull cilium --repo https://helm.cilium.io/ --version "$CILIUM_VERSION" --destination "$work"
   if ! printf '%s  %s\n' "$CILIUM_CHART_SHA256" "$chart" | sha256sum -c - > /dev/null; then
-    fail "chart digest: cilium-$CILIUM_VERSION.tgz does not match CILIUM_CHART_SHA256; nothing was rendered"
-    exit 1
+    die "chart digest: cilium-$CILIUM_VERSION.tgz does not match CILIUM_CHART_SHA256; nothing was rendered"
   fi
   ok "chart digest: cilium-$CILIUM_VERSION.tgz matches CILIUM_CHART_SHA256"
 
   if ! helm template cilium "$chart" --namespace kube-system -f "$values" \
     > "$work/render.yaml" 2> "$work/helm.err"; then
     cat "$work/helm.err"
-    fail "render: helm template failed with values.yaml"
-    exit 1
+    die "render: helm template failed with values.yaml"
   fi
   echo "Render: the chart with values.yaml"
   check_render "$work/render.yaml" "$values"
@@ -192,6 +204,7 @@ main() {
       "Failing too: $(comm -13 <(echo "$want") <(echo "$got") | paste -s -d ';' -)."
   fi
 
+  finished=yes
   if test "$failures" -gt 0; then
     echo "$me: $failures checks failed" >&2
     exit 1

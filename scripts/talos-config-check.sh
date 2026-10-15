@@ -60,10 +60,25 @@ mode=check # "check" prints ok and FAIL lines; "selftest" prints a SELFTEST-RED 
 red=()     # the names of the checks that failed in the current mode
 failures=0
 
+finished=no # set by every deliberate exit; the EXIT trap reports any other
+
 ok() { echo "ok $*"; }
 fail() {
   echo "FAIL $*"
   failures=$((failures + 1))
+}
+# die MESSAGE: a FAIL line, then stop; what follows depends on this step.
+die() {
+  fail "$@"
+  finished=yes
+  exit 1
+}
+# The EXIT trap: remove the work directory. set -e stops the script at a command that fails
+# unexpectedly; say so, so that such a stop is never silent.
+on_exit() {
+  local rc=$?
+  rm -rf "$work"
+  if test "$rc" != 0 && test "$finished" != yes; then echo "$me: stopped early (status $rc)" >&2; fi
 }
 
 # eq NAME EXPECTED GOT [NODE]: the check passes only when EXPECTED is neither empty nor null and GOT
@@ -322,11 +337,19 @@ sgit() { git -c user.name=scratch -c user.email=scratch@invalid -c commit.gpgsig
 
 # What a refusal must leave as it was: generated/, secrets/ and the directory outside the copy that
 # the link cases point at. One line per path: its type, and a link's target or a file's mode and
-# content hash.
+# content hash. A path that is not there is "missing", so a deleted generated/ shows as a change.
 snapshot() {
-  local f
-  find "$r/$d/generated" "$r/$d/secrets" "$work/target" 2> /dev/null | LC_ALL=C sort | while IFS= read -r f; do
-    if test -L "$f"; then
+  local p f
+  for p in "$r/$d/generated" "$r/$d/secrets" "$work/target"; do
+    if ! test -e "$p" && ! test -L "$p"; then
+      printf 'missing %s\n' "$p"
+      continue
+    fi
+    find "$p" | LC_ALL=C sort
+  done | while IFS= read -r f; do
+    if test "${f%% *}" = missing; then
+      printf '%s\n' "$f"
+    elif test -L "$f"; then
       printf 'link %s -> %s\n' "$f" "$(readlink "$f")"
     elif test -f "$f"; then
       # ls -l | cut reads the mode the same way on macOS and Linux; stat's options differ.
@@ -384,7 +407,7 @@ prepare() {
   # shellcheck source=/dev/null
   source "$top/$d/metadata.env"
   work="$(mktemp -d "${RUNNER_TEMP:-${TMPDIR:-/tmp}}/talos-config.XXXXXX")"
-  trap 'rm -rf "$work"' EXIT
+  trap on_exit EXIT
   mkdir "$work/home" "$work/blocktmp"
   export SOPS_AGE_KEY_FILE="$work/age.txt"
 
@@ -392,9 +415,9 @@ prepare() {
   v="$(talosctl version --client --short)" || v=""
   if ! grep -qxF "Talos $TALOS_VERSION" <<< "$v"; then
     echo "$me: talosctl is not $TALOS_VERSION, the version metadata.env pins" >&2
+    finished=yes
     exit 2
   fi
-
 }
 
 # The copy, in $work/repo: tracked paths, with their working-tree content, committed with a
@@ -419,7 +442,7 @@ make_copy() {
   c="$work/repo/$d"
   age-keygen -o "$work/age.txt" 2> /dev/null
   age-keygen -o "$work/wrong-age.txt" 2> /dev/null
-  test -f "$work/repo/.sops.yaml" || { fail "setup: .sops.yaml is not tracked"; exit 1; }
+  test -f "$work/repo/.sops.yaml" || die "setup: .sops.yaml is not tracked"
   (cd "$work/repo" && PUB="$(age-keygen -y "$work/age.txt")" yq -i '(.creation_rules[].age) = strenv(PUB)' .sops.yaml)
   talosctl gen secrets -o "$work/plain.yaml" > /dev/null
   rm -rf "$c/secrets" "$c/secrets.sops.yaml"
@@ -430,7 +453,6 @@ make_copy() {
   rm -rf "$c/secrets"
   sgit -C "$work/repo" add -A -f .
   sgit -C "$work/repo" commit -q --no-verify -m "the copy, with a throwaway bundle"
-
 }
 
 # 1. One copy of each marked block. The talos-generate-configs block is written to $block.
@@ -445,10 +467,8 @@ find_blocks() {
   failures=$((failures + $(grep -c '^FAIL' "$work/d12.out" || true)))
   block="$work/blocks/talos-generate-configs.sh"
   if ! grep -q '^ok single copy: talos-generate-configs ' "$work/d12.out"; then
-    fail "the talos-generate-configs block could not be found, so it was not run"
-    exit 1
+    die "the talos-generate-configs block could not be found, so it was not run"
   fi
-
 }
 
 # 2. Run 1, from docs/ with bash, over a 0644 decoy at secrets/secrets.yaml (a second throwaway).
@@ -462,8 +482,7 @@ run_twice() {
   echo "Run 1: the talos-generate-configs block, with bash, from docs/"
   if ! run_block "$work/repo/docs" -- bash; then
     show_block_output
-    fail "run 1: the block did not finish"
-    exit 1
+    die "run 1: the block did not finish"
   fi
   show_block_output
   if cmp -s "$work/plain.yaml" "$c/secrets/secrets.yaml"; then
@@ -488,8 +507,7 @@ run_twice() {
   if command -v zsh > /dev/null; then
     # shellcheck disable=SC2016
     if test "$(env HOME="$work/home" zsh -f -c 'printf %s "$HOME"')" != "$work/home"; then
-      fail "run 2: zsh does not keep the work directory's HOME, so it was not run"
-      exit 1
+      die "run 2: zsh does not keep the work directory's HOME, so it was not run"
     fi
     shell=(zsh -f -i)
     # Empty prompts keep zsh's interactive prompts, which show the host name, out of the output.
@@ -501,8 +519,7 @@ run_twice() {
   fi
   if ! run_block "$work/repo" "${shell_env[@]}" -- "${shell[@]}"; then
     show_block_output
-    fail "run 2: the block did not finish"
-    exit 1
+    die "run 2: the block did not finish"
   fi
   show_block_output
   for x in controlplane "${nodes[@]}"; do
@@ -640,6 +657,7 @@ main() {
   run_twice
   check_values
   check_refusals
+  finished=yes
   if test "$failures" -gt 0; then
     echo "$me: $failures checks failed" >&2
     exit 1
