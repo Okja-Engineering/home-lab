@@ -30,7 +30,7 @@
 #
 # Needs bash 5 or later, git, talosctl at metadata.env's TALOS_VERSION, sops, age-keygen, yq (v4),
 # python3, tar, awk, cmp and sha256sum. Exit status: 0 when every check passed, 1 when one failed,
-# 2 when bash is older than 5 or a tool is missing.
+# 2 when bash is older than 5, a tool is missing, or talosctl is not TALOS_VERSION.
 test "${BASH_VERSINFO[0]:-0}" -ge 5 || { echo "talos-config-check: needs bash 5 or later" >&2; exit 2; }
 set -euo pipefail
 
