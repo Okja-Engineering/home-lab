@@ -147,8 +147,11 @@ The block below writes `generated/cp-01.yaml` to `generated/cp-03.yaml` and `gen
     rm -f "$new"
     echo "Stopping: the committed bundle did not decrypt with your age key. secrets/secrets.yaml was not changed." >&2
     exit 1
+  elif ! mv -f "$new" secrets/secrets.yaml; then
+    rm -f "$new"
+    echo "Stopping: secrets/secrets.yaml could not be replaced, for the reason mv gives above. It was not changed, and the decrypted copy was removed." >&2
+    exit 1
   fi
-  mv -f "$new" secrets/secrets.yaml
   rm -rf generated
   talosctl gen config home-prod "$CLUSTER_ENDPOINT" \
     --with-secrets secrets/secrets.yaml \
