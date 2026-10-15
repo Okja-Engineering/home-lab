@@ -10,7 +10,8 @@
 # secrets bundle that sops encrypts to a throwaway age key. Then, in that copy:
 #   1. It finds the three marked paste blocks (talos-generate-configs, cilium-install and
 #      cilium-ready). Each must appear once, between its markers, and its command must not appear in
-#      fenced code anywhere else. A copy would drift.
+#      fenced code anywhere else: a copy would drift. No block may hold a "#", which zsh, with its
+#      default options, runs as a command.
 #   2. It runs the talos-generate-configs block as it is written: from docs/ with bash, then from the
 #      top of the copy with zsh (with bash where zsh is missing). The second run must give the same
 #      machine configs and a new talosconfig.
@@ -465,6 +466,18 @@ find_blocks() {
     D12_SIG_3="${signatures[2]}" awk "$d12_awk" "${md[@]}" < /dev/null) > "$work/d12.out" || true
   cat "$work/d12.out"
   failures=$((failures + $(grep -c '^FAIL' "$work/d12.out" || true)))
+  # A paste block holds no "#": zsh, with interactivecomments off as it is by default, runs a
+  # comment as a command. CI has no zsh, so this is checked here.
+  local name hash
+  for name in talos-generate-configs cilium-install cilium-ready; do
+    test -f "$work/blocks/$name.sh" || continue
+    hash="$(grep -n -m 1 '#' "$work/blocks/$name.sh" || true)"
+    if test -z "$hash"; then
+      ok "no # in the $name block"
+    else
+      fail "no # in the $name block: block line ${hash%%:*}: ${hash#*:}"
+    fi
+  done
   block="$work/blocks/talos-generate-configs.sh"
   if ! grep -q '^ok single copy: talos-generate-configs ' "$work/d12.out"; then
     die "the talos-generate-configs block could not be found, so it was not run"
